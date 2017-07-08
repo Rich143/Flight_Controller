@@ -33,12 +33,19 @@ void executeSerialCommand(char str[]) {
 
 void vBlinkTask( void *pvParameters )
 {
+    const int I2C_ADDRESS_ACCEL = 0b00110010; // It seems necessary to shift the address to the high 7 bits, like the way it will be sent
+    uint8_t data[2] = {4,4};
+
     for( ;; )
     {
         HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
 
+        /*HAL_I2C_Master_Transmit(&I2cHandle, I2C_ADDRESS_ACCEL, data, 2, 10000);*/
+        HAL_I2C_Mem_Read(&I2cHandle, I2C_ADDRESS_ACCEL, 0x20,
+                         I2C_MEMADD_SIZE_8BIT, data, 1, 10000);
+
         // 100ms period
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
     /* Tasks must not attempt to return from their implementing
