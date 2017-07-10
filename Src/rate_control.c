@@ -6,19 +6,34 @@
 #define RATE_LOOP_PERIOD_US 100
 
 PID_Gains_t gains = {
-    .K_P = 10,
-    .K_I = 0.01,
-    .K_D = 1
+    10, // K_P
+    0.01, // K_I
+    1 // K_D
 };
 
 Limits_t rateLimits = {
-    .min = ROTATION_AXIS_OUTPUT_MIN,
-    .max = ROTATION_AXIS_OUTPUT_MAX
+    ROTATION_AXIS_OUTPUT_MIN, // MIN
+    ROTATION_AXIS_OUTPUT_MAX // MAX
 };
 
-ControlInfo_t rollInfo = {.dt = RATE_LOOP_PERIOD_US};
-ControlInfo_t pitchInfo = {.dt = RATE_LOOP_PERIOD_US};
-ControlInfo_t yawInfo = {.dt = RATE_LOOP_PERIOD_US};
+ControlInfo_t rollInfo = {
+    RATE_LOOP_PERIOD_US,
+    0,
+    0,
+    0
+};
+ControlInfo_t pitchInfo = {
+    RATE_LOOP_PERIOD_US,
+    0,
+    0,
+    0
+};
+ControlInfo_t yawInfo = {
+    RATE_LOOP_PERIOD_US,
+    0,
+    0,
+    0
+};
 
 RotationAxisOutputs_t rotationOutputs = {0};
 

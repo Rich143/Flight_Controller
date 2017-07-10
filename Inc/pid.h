@@ -2,9 +2,9 @@
 #define __PID_H
 
 typedef struct ControlInfo {
+    int dt; // Time between control loop calls in us
     float integratedError;
     int saturated;
-    int dt; // Time between control loop calls in us
     int lastError;
 } ControlInfo_t;
 
