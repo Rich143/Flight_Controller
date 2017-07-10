@@ -25,22 +25,23 @@ int limit(int val, int min, int max)
     }
 }
 
-int controlLoop(int error, ControlInfo_t *info)
+int controlLoop(int error, ControlInfo_t *info, PID_Gains_t *gain,
+                Limits_t* limits)
 {
     if ((info->saturated > 0 && error > 0)
         || (info->saturated < 0 && error < 0)) {
         // Do Nothing
     } else {
-        info->integratedError += error * info->K_I * info->dt;
+        info->integratedError += error * gain->K_I * info->dt;
         info->integratedError = satLimit(info->integratedError,
-                                         info->minValue,
-                                         info->maxValue, &info->saturated);
+                                         limits->min,
+                                         limits->max, &info->saturated);
     }
 
-    int ret = error * info->K_P + info->integratedError
-        + (error - info->lastError) * info->K_D * info->dt;
+    int ret = error * gain->K_P + info->integratedError
+        + (error - info->lastError) * gain->K_D * info->dt;
 
-    ret = limit(ret, info->minValue, info->maxValue);
+    ret = limit(ret, limits->min, limits->max);
 
     info->lastError = error;
 
