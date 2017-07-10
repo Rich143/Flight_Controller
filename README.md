@@ -1,8 +1,6 @@
-# Blank projects #
-Common things you can do:
+# Flight Controller #
 
-* turn on LED (PA5)
-* read button (PC13)
+STM32 based flight controller for quadcopter
 
 ## Resources:
 ### Processor datasheet:
