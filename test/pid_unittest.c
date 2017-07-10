@@ -10,9 +10,13 @@ class PIDTest : public ::testing::Test {
             controlInfo.maxValue = 100;
             controlInfo.minValue = -100;
             controlInfo.dt = 1;
+
+            controlInfo.integratedError = 0;
+            controlInfo.saturated = 0;
+            controlInfo.lastError = 0;
         }
 
-        ControlInfo_t controlInfo = {0};
+        ControlInfo_t controlInfo;
 };
 
 TEST_F(PIDTest, zeroErrorZeroOutInitially)
