@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Rich143/Flight_Controller.svg?branch=master)](https://travis-ci.org/Rich143/Flight_Controller)
+
 # Flight Controller #
 
 STM32 based flight controller for quadcopter
