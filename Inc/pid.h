@@ -4,7 +4,7 @@
 typedef struct ControlInfo {
     float integratedError;
     int saturated;
-    int dt; // Time between control loop calls in ms
+    int dt; // Time between control loop calls in us
     int lastError;
 } ControlInfo_t;
 
@@ -15,8 +15,8 @@ typedef struct PID_Gains {
 } PID_Gains_t;
 
 typedef struct Limits {
-    int max;
     int min;
+    int max;
 } Limits_t;
 
 int controlLoop(int error, ControlInfo_t *info, PID_Gains_t *gains,
