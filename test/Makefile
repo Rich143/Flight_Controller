@@ -12,6 +12,11 @@
 # project, except GTEST_HEADERS, which you can use in your own targets
 # but shouldn't modify.
 
+# Where to store our generated binaries
+BIN_DIR = Bin
+
+BINARY = $(BIN_DIR)/test.bin
+
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
 GTEST_DIR = ../common/googletest/googletest
@@ -33,7 +38,14 @@ CXXFLAGS += -g -Wall -Wextra -pthread
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = fake_logic_unittest
+TEST_SRC = fake_logic_unittest.c pid_unittest.c
+
+# All src files tested
+TESTED_SRC_FILES = fake_logic.c pid.c
+TESTED_SRC_FILES := $(addprefix $(SRC_DIR)/, $(TESTED_SRC_FILES))
+
+TESTED_OBJS := $(TESTED_SRC_FILES:%.c=$(BIN_DIR)/%.o)
+TEST_OBJS := $(TEST_SRC:%.c=$(BIN_DIR)/%.o)
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -42,13 +54,18 @@ GTEST_HEADERS = $(GTEST_DIR)/include/gtest/*.h \
 
 # House-keeping build targets.
 
-all : $(TESTS)
+all : $(BINARY)
 
-clean :
-	rm -f $(TESTS) gtest.a gtest_main.a *.o
+run : $(BINARY)
+	./$(BINARY)
 
-run: $(TESTS)
-	$(foreach test, $(TESTS), ./$(test))
+.PHONY: clean
+clean:
+	rm -rf $(BIN_DIR)
+
+$(BINARY) : $(TEST_OBJS) $(TESTED_OBJS) $(BIN_DIR)/gtest_main.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $(BINARY)
+
 
 # Builds gtest.a and gtest_main.a.
 
@@ -60,30 +77,21 @@ GTEST_SRCS_ = $(GTEST_DIR)/src/*.cc $(GTEST_DIR)/src/*.h $(GTEST_HEADERS)
 # implementation details, the dependencies specified below are
 # conservative and not optimized.  This is fine as Google Test
 # compiles fast and for ordinary users its source rarely changes.
-gtest-all.o : $(GTEST_SRCS_)
+$(BIN_DIR)/gtest-all.o : $(GTEST_SRCS_)
 	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
-            $(GTEST_DIR)/src/gtest-all.cc
+            $(GTEST_DIR)/src/gtest-all.cc -o $@
 
-gtest_main.o : $(GTEST_SRCS_)
+$(BIN_DIR)/gtest_main.o : $(GTEST_SRCS_)
 	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
-            $(GTEST_DIR)/src/gtest_main.cc
+            $(GTEST_DIR)/src/gtest_main.cc -o $@
 
-gtest.a : gtest-all.o
+$(BIN_DIR)/gtest.a : $(BIN_DIR)/gtest-all.o
 	$(AR) $(ARFLAGS) $@ $^
 
-gtest_main.a : gtest-all.o gtest_main.o
+$(BIN_DIR)/gtest_main.a : $(BIN_DIR)/gtest-all.o $(BIN_DIR)/gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
 
-# Builds a sample test.  A test should link with either gtest.a or
-# gtest_main.a, depending on whether it defines its own main()
-# function.
+$(BIN_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
-fake_logic.o : $(SRC_DIR)/fake_logic.c $(INC_DIR)/fake_logic.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(SRC_DIR)/fake_logic.c
-
-fake_logic_unittest.o : $(TEST_DIR)/fake_logic_unittest.c \
-                     $(INC_DIR)/fake_logic.h $(GTEST_HEADERS)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(TEST_DIR)/fake_logic_unittest.c
-
-fake_logic_unittest : fake_logic.o fake_logic_unittest.o gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -lpthread $^ -o $@
