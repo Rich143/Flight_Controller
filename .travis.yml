@@ -28,18 +28,3 @@ script:
 sudo: false
 notifications:
     email: false
-
-env:
-  global:
-   # The next declaration is the encrypted COVERITY_SCAN_TOKEN, created
-   #   via the "travis encrypt" command using the project repo's public key
-   - secure: "JefWi4aLpXvl8xsXtuSijbvbDObuPbGipk5Mh/6spyTP2k2XHEYa74QOL3MSdqtsbzd5awlEXauY20SEzw7BtcVpXER8K93kTnrEK+Y1tLdIjagvZnojG4yzp2g0SKMRMOoR+n/Hi9X0nDzO/g/2+XxTDDfBiDf2vc2ozGPjvK0u8U0gcXapuT7d9ETFIPbM6U9e99j6kyr7i2VxFMzaQXbEk44C2PJtfql4rhqGRaX1MkHgo21pqQt7JfuglGXX0DF1Eex6SEFDF71SGV9b7dP/CMhp2aKs1ZpyjwfRn6WRJ0ouUiWwK7YseOPYxI2aIAGg17d3vDRAdf3vnUfS0FSwNahPQnAofpDJ2sMBlkZP5kzkOoVSi4tqE8mVuNml6tFlZL/+Q4cepjeGVZyBj+AfkYEmL6YzuOOIIeaHfvpcPUZ28XcSuyItRNEjBYcPY2OmcAEYqukRG6kKYqsHyI20oqlJx1O74n2HhH3miDYwzuVYblqUceSrHbncNNmRsU6t1XMi2aF/KftCwDZ7JTIq7iQxLUz+7T1UYp86reeAg8XvEMvJyflXwBNZl76DPrPoYBa0MI4hbi+MocOeTNbQ7m6K+sB8DADrZBBFSMrAewnRdPRtICy9BGuXF7X9z+Jt9xg2kGe/CF5QJGZH6lQyhxDl87kPg9FXwEjDOdI="
-
-addons:
-  coverity_scan:
-    project:
-      name: "Rich143/Flight_Controller"
-      description: "<Your project description here>"
-    notification_email: richard.arnold.matthews@gmail.com
-    build_command:   make
-    branch_pattern: coverity_scan
