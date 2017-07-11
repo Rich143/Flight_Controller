@@ -1,5 +1,5 @@
 /* Waterloo Formula Electric 2017 */
-#include <stm32f0xx.h>
+#include <stm32f4xx.h>
 #include <main.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -9,8 +9,6 @@
 #include "task.h"
 
 #include "debug.h"
-#include "can.h"
-#include "can_heartbeat.h"
 #include "debounce.h"
 #include "hardware.h"
 #include "pins_common.h"

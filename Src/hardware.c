@@ -1,4 +1,4 @@
-#include "stm32f0xx_hal.h"
+#include "stm32f4xx_hal.h"
 #include "hardware.h"
 #include "pins_common.h"
 #include "pins.h"

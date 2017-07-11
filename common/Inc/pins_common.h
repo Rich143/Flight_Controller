@@ -8,7 +8,7 @@
 #ifndef PIN_COMMON_H_
 #define PIN_COMMON_H_
 
-#include <stm32f0xx_hal.h>
+#include <stm32f4xx_hal.h>
 
 // Processor inputs
 #define BUTT1_PORT          GPIOC
