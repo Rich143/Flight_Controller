@@ -21,3 +21,5 @@ Doxyfile
 *_unittest
 *.a
 *.bak
+cov-int
+*.tgz
