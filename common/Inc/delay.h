@@ -8,7 +8,7 @@
 #ifndef DELAY_H_
 #define DELAY_H_
 
-#include <stm32f0xx_hal.h>
+#include <stm32f4xx_hal.h>
 #include "stdbool.h"
 
 void delay_init();

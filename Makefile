@@ -46,7 +46,7 @@ LINK_SCRIPT="$(DRIVER_DIR)/STM32F410RBTx_FLASH.ld"
 # -Wl,--defsym=malloc_getpagesize_P=0x1000, set the default page size of malloc to 0x1000, which means the heap increases in size by 4096 bytes at a time
 LINKER_FLAGS=-lc -lnosys -lm -mthumb -mcpu=cortex-m4  -Wl,--gc-sections -T$(LINK_SCRIPT) -static  -Wl,--start-group -lm -Wl,--end-group -Wl,-cref "-Wl,-Map=$(MAP_FILE)" -Wl,--defsym=malloc_getpagesize_P=0x1000
 
-COMMON_FLAGS=-c -g -O2 -mcpu=cortex-m4 -std=gnu99 -Wall -mthumb -mfloat-abi=hard
+COMMON_FLAGS=-c -g -O2 -mcpu=cortex-m4 -std=gnu99 -Wall -mthumb -mfloat-abi=softfp
 ASSEMBLER_FLAGS=$(COMMON_FLAGS) -x assembler-with-cpp
 
 # -ffunction-sections and -fdata-sections, Place each function or data item into its own section in the output file
@@ -60,9 +60,11 @@ SRC := $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM0/*.c) \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/portable/MemMang/*.c) \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/CMSIS_RTOS/*.c) \
-	   stm32f0xx_hal_driver/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
+	   stm32f4xx_hal_driver/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
 
 SRC := $(filter-out $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Src/stm32f4xx_hal_msp_template.c,$(SRC))
+SRC := $(filter-out $(DRIVER_DIR)/Src/stm32f4xx_hal_timebase_rtc_alarm_template.c,$(SRC)) # This seems to be some template file that needs to be modified to be used
+SRC := $(filter-out $(DRIVER_DIR)/Src/stm32f4xx_hal_timebase_rtc_wakeup_template.c,$(SRC)) # This seems to be some template file that needs to be modified to be used
 
 SRCASM := $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_stm32f410rx.s
 
@@ -80,14 +82,14 @@ load: $(BIN_FILE)
 	# this is stand alone stlink
 	# openocd -f interface/stlink-v2.cfg -f target/stm32f0x_stlink.cfg -c init -c "reset init" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" -c "reset run" -c shutdown
 	# this is for nucleo stlink
-	openocd -f interface/stlink-v2-1.cfg -f target/stm32f0x.cfg -c "reset_config srst_only connect_assert_srst" -c init -c "reset halt" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" -c "reset run" -c shutdown
+	openocd -f interface/stlink-v2-1.cfg -f target/stm32f4x.cfg -c "reset_config srst_only connect_assert_srst" -c init -c "reset halt" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" -c "reset run" -c shutdown
 
 
 connect: $(BIN_FILE)
 	# this is stand alone stlink
 	# openocd -f interface/stlink-v2.cfg -f target/stm32f0x_stlink.cfg -c init -c "reset init" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" -c "reset run" -c shutdown
 	# this is for nucleo stlink
-	openocd -f interface/stlink-v2-1.cfg -f target/stm32f0x.cfg -c init -c "reset init" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" &
+	openocd -f interface/stlink-v2-1.cfg -f target/stm32f4x.cfg -c init -c "reset init" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" &
 
 debug: connect
 	arm-none-eabi-gdb --eval-command="target remote localhost:3333" --eval-command="monitor reset halt" --eval-command="monitor arm semihosting enable"  $(ELF_FILE)

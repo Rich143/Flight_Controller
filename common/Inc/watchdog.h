@@ -8,7 +8,7 @@
 #ifndef WATCHDOG_H_
 #define WATCHDOG_H_
 
-#include <stm32f0xx_hal.h>
+#include <stm32f4xx_hal.h>
 #include "stdbool.h"
 
 bool check_reset_by_watchdog();
