@@ -1,63 +1,26 @@
 /* Waterloo Formula Electric 2017 */
 #include <stm32f4xx.h>
 #include <main.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
+/*#include <stdbool.h>*/
+/*#include <stdint.h>*/
+/*#include <string.h>*/
 
-#include "FreeRTOS.h"
-#include "task.h"
+#define __NUCLEO__
+/*#define __FC__*/
 
-#include "debug.h"
-#include "debounce.h"
-#include "hardware.h"
-#include "pins_common.h"
+#ifdef __FC__
+#define LED_PIN GPIO_PIN_12
+#define LED_PORT GPIOB
+#elif defined(__NUCLEO__)
+#define LED_PIN GPIO_PIN_5
+#define LED_PORT GPIOA
+#endif
 
-#include "fake_logic.h"
-
-char PS[] = "BLANKPROJECT";
-
-#define MAIN_LOOP_PERIOD_MS (5)
-
-void executeSerialCommand(char str[]) {
-    if (strcmp(str, "marco") == 0) {
-        printf("polo\n");
-    } else if (strncmp(str, "add", 3) == 0) {
-        int a, b;
-        sscanf(str, "add %d %d", &a, &b);
-        printf("sum is %d\n", add(a, b));
-    }
-}
-
-void vBlinkTask( void *pvParameters )
-{
-    const int I2C_ADDRESS_ACCEL = 0b00110010; // It seems necessary to shift the address to the high 7 bits, like the way it will be sent
-    uint8_t data[2] = {4,4};
-
-    for( ;; )
-    {
-        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
-
-        /*HAL_I2C_Master_Transmit(&I2cHandle, I2C_ADDRESS_ACCEL, data, 2, 10000);*/
-        HAL_I2C_Mem_Read(&I2cHandle, I2C_ADDRESS_ACCEL, 0x20,
-                         I2C_MEMADD_SIZE_8BIT, data, 1, 10000);
-
-        // 100ms period
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-    }
-
-    /* Tasks must not attempt to return from their implementing
-    function or otherwise exit.  In newer FreeRTOS port
-    attempting to do so will result in an configASSERT() being
-    called if it is defined.  If it is necessary for a task to
-    exit then have the task call vTaskDelete( NULL ) to ensure
-    its exit is clean. */
-    vTaskDelete( NULL );
-}
+void Clock_Config();
 
 int32_t setup(void){
     // System Clock config
-    SystemClock_Config();
+    Clock_Config();
 
     // Reset of all peripherals, Initializes teh Flash interface and the Systick
     HAL_Init();
@@ -65,25 +28,79 @@ int32_t setup(void){
     // System interrupt init
     HAL_MspInit();
 
-    // Initialize peripherals GPIO
-    MX_GPIO_Init();
-
-    // Initialize UART for printf
-    debug_init();
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = LED_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+    HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 
     return 0;
 }
 
-// challenge: without changing the source file and only using the debugger, change the
-// code to print "Hello from PB"
-char str[] = "Helxo from PB\n";
-
 int main(void)
 {
     setup();
-    xTaskCreate(vBlinkTask, "blinkTask", 200, NULL, 1 /* [> priority <] */, NULL);
 
-    printf(str);
-    vTaskStartScheduler();
+    while (1)
+    {
+        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
+
+        HAL_Delay(1000);
+    }
+
     return 0;
+}
+
+/** System Clock Configuration
+ */
+void Clock_Config() {
+    RCC_ClkInitTypeDef RCC_ClkInitStruct;
+    RCC_OscInitTypeDef RCC_OscInitStruct;
+
+    /* Enable Power Control clock */
+    __HAL_RCC_PWR_CLK_ENABLE();
+
+    /* The voltage scaling allows optimizing the power consumption when the device is
+       clocked below the maximum system frequency, to update the voltage scaling value
+       regarding system frequency refer to product datasheet.  */
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+    /* Enable HSI Oscillator and activate PLL with HSI as source */
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+    RCC_OscInitStruct.HSICalibrationValue = 0x10;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+    RCC_OscInitStruct.PLL.PLLM = 16;
+    RCC_OscInitStruct.PLL.PLLN = 200;
+    RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+    RCC_OscInitStruct.PLL.PLLQ = 15;
+    RCC_OscInitStruct.PLL.PLLR = 7;
+
+    if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+    {
+        /*Error_Handler();*/
+    }
+
+    /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
+       clocks dividers */
+    RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+    if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+    {
+        /*Error_Handler();*/
+    }
+
+    /* Enable appropriate peripheral clocks */
+    __SYSCFG_CLK_ENABLE();
+
+    /* GPIO Ports Clock Enable */
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    __HAL_RCC_GPIOH_CLK_ENABLE();
 }

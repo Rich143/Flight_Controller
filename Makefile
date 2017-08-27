@@ -54,12 +54,7 @@ ASSEMBLER_FLAGS=$(COMMON_FLAGS) -x assembler-with-cpp
 COMPILER_FLAGS=$(COMMON_FLAGS) -ffunction-sections -fdata-sections $(DEFINE_FLAGS)
 
 SRC := $(wildcard $(SRC_DIR)/*.c) \
-	   $(addprefix $(COMMON_LIB_DIR)/Src/, $(COMMON_LIB_SRC)) \
 	   $(wildcard stm32f4xx_hal_driver/Src/*.c) \
-	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/*.c) \
-	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM0/*.c) \
-	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/portable/MemMang/*.c) \
-	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/CMSIS_RTOS/*.c) \
 	   stm32f4xx_hal_driver/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
 
 SRC := $(filter-out $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Src/stm32f4xx_hal_msp_template.c,$(SRC))
@@ -82,7 +77,7 @@ load: $(BIN_FILE)
 	# this is stand alone stlink
 	# openocd -f interface/stlink-v2.cfg -f target/stm32f0x_stlink.cfg -c init -c "reset init" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" -c "reset run" -c shutdown
 	# this is for nucleo stlink
-	openocd -f interface/stlink-v2-1.cfg -f target/stm32f4x.cfg -c "reset_config srst_only connect_assert_srst" -c init -c "reset halt" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" -c "reset run" -c shutdown
+	openocd -f interface/stlink-v2-1.cfg -f target/stm32f4x_stlink.cfg -c "reset_config srst_only connect_assert_srst" -c init -c "reset halt" -c halt -c "flash write_image erase $(BIN_FILE) 0x08000000" -c "verify_image $(BIN_FILE)" -c "reset run" -c shutdown
 
 
 connect: $(BIN_FILE)
