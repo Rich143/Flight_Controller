@@ -22,7 +22,7 @@ INCLUDE_DIRS= $(COMMON_LIB_DIR)/Inc \
 			  Inc \
 			  $(COMMON_LIB_DIR)/Inc \
 			  $(SRC_DIR)/FreeRTOS/Source/include \
-			  $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM0 \
+			  $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 			  $(SRC_DIR)/FreeRTOS/Source/CMSIS_RTOS
 
 INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
