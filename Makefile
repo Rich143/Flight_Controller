@@ -55,6 +55,10 @@ COMPILER_FLAGS=$(COMMON_FLAGS) -ffunction-sections -fdata-sections $(DEFINE_FLAG
 
 SRC := $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard stm32f4xx_hal_driver/Src/*.c) \
+	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/*.c) \
+	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM4F/*.c) \
+	   $(SRC_DIR)/FreeRTOS/Source/portable/MemMang/heap_1.c \
+	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/CMSIS_RTOS/*.c) \
 	   stm32f4xx_hal_driver/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
 
 SRC := $(filter-out $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Src/stm32f4xx_hal_msp_template.c,$(SRC))

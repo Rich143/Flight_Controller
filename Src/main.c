@@ -1,9 +1,11 @@
 /* Waterloo Formula Electric 2017 */
 #include <stm32f4xx.h>
 #include <main.h>
-/*#include <stdbool.h>*/
-/*#include <stdint.h>*/
-/*#include <string.h>*/
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "freertos.h"
+#include "task.h"
 
 #define __NUCLEO__
 /*#define __FC__*/
@@ -17,6 +19,24 @@
 #endif
 
 void Clock_Config();
+
+void vBlinkTask( void *pvParameters )
+{
+    for( ;; )
+    {
+        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
+        // 100ms period
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+
+    /* Tasks must not attempt to return from their implementing
+    function or otherwise exit.  In newer FreeRTOS port
+    attempting to do so will result in an configASSERT() being
+    called if it is defined.  If it is necessary for a task to
+    exit then have the task call vTaskDelete( NULL ) to ensure
+    its exit is clean. */
+    vTaskDelete( NULL );
+}
 
 int32_t setup(void){
     // System Clock config
@@ -42,12 +62,9 @@ int main(void)
 {
     setup();
 
-    while (1)
-    {
-        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
+    xTaskCreate(vBlinkTask, "blinkTask", 200, NULL, 1 /* [> priority <] */, NULL);
 
-        HAL_Delay(1000);
-    }
+    vTaskStartScheduler();
 
     return 0;
 }
