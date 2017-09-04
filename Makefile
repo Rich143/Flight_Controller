@@ -9,7 +9,8 @@ BIN_BASE_DIR = Bin
 DRIVER_DIR = stm32f4xx_hal_driver
 BIN_DIR = $(BIN_BASE_DIR)/$(BINARY_BASE_NAME)
 COMMON_LIB_DIR = common
-COMMON_LIB_SRC = debug.c delay.c debounce.c id_chip.c watchdog.c
+#COMMON_LIB_SRC = debug.c delay.c debounce.c id_chip.c watchdog.c
+COMMON_LIB_SRC = debug.c
 
 ELF_FILE = $(BIN_DIR)/$(BINARY_BASE_NAME).elf
 BIN_FILE = $(BIN_DIR)/$(BINARY_BASE_NAME).bin
@@ -20,7 +21,6 @@ INCLUDE_DIRS= $(COMMON_LIB_DIR)/Inc \
 			  $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Include \
 			  $(DRIVER_DIR)/CMSIS/Include \
 			  Inc \
-			  $(COMMON_LIB_DIR)/Inc \
 			  $(SRC_DIR)/FreeRTOS/Source/include \
 			  $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 			  $(SRC_DIR)/FreeRTOS/Source/CMSIS_RTOS
@@ -28,7 +28,7 @@ INCLUDE_DIRS= $(COMMON_LIB_DIR)/Inc \
 INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
 
 
-DEFINES := "USE_HAL_DRIVER" "STM32F410Rx" $(if $(TARGET), $(TARGET), NUCLEO)
+DEFINES := "USE_HAL_DRIVER" "STM32F410Rx" $(if $(TARGET), $(TARGET), FC)
 DEFINE_FLAGS := $(addprefix -D,$(DEFINES))
 
 LINK_SCRIPT="$(DRIVER_DIR)/STM32F410RBTx_FLASH.ld"
@@ -58,6 +58,7 @@ SRC := $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard stm32f4xx_hal_driver/Src/*.c) \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/*.c) \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM4F/*.c) \
+	   $(addprefix $(COMMON_LIB_DIR)/Src/, $(COMMON_LIB_SRC)) \
 	   $(SRC_DIR)/FreeRTOS/Source/portable/MemMang/heap_1.c \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/CMSIS_RTOS/*.c) \
 	   stm32f4xx_hal_driver/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c

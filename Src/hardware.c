@@ -2,6 +2,7 @@
 #include "hardware.h"
 #include "pins_common.h"
 #include "pins.h"
+#include "debug.h"
 
 #define I2Cx                            I2C1
 #define I2Cx_CLK_ENABLE()               __HAL_RCC_I2C1_CLK_ENABLE()
@@ -104,7 +105,10 @@ void setup_outputs() {
     GPIO_InitStruct.Pin = LED_PIN;
     HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 #elif defined(FC)
-    GPIO_InitStruct.Pin = LED_PIN;
+    GPIO_InitStruct.Pin = LED3_PIN;
+    HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = LED4_PIN;
     HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 #endif
 }
@@ -194,4 +198,5 @@ void hardware_init() {
     setup_inputs();
     setup_outputs();
     setup_I2C();
+    debug_init();
 }
