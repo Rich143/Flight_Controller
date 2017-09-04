@@ -5,11 +5,12 @@
 /*#include <stdint.h>*/
 /*#include <string.h>*/
 
-#define __NUCLEO__
-/*#define __FC__*/
+/*#define __NUCLEO__*/
+#define __FC__
 
 #ifdef __FC__
-#define LED_PIN GPIO_PIN_12
+//******* DO NOT USE PB12 or 13, LED1 is shorted to LED2 ********//
+#define LED_PIN GPIO_PIN_15
 #define LED_PORT GPIOB
 #elif defined(__NUCLEO__)
 #define LED_PIN GPIO_PIN_5
