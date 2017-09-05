@@ -21,11 +21,11 @@ void vPrintTask( void *pvParameters )
 
 void vBlinkTask( void *pvParameters )
 {
-    LED3_OFF
+    LED3_ON
     for( ;; )
     {
-        /*HAL_GPIO_TogglePin(LED_PORT, LED3_PIN);*/
-        /*HAL_GPIO_TogglePin(LED_PORT, LED4_PIN);*/
+        HAL_GPIO_TogglePin(LED_PORT, LED3_PIN);
+        HAL_GPIO_TogglePin(LED_PORT, LED4_PIN);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
