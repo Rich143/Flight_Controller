@@ -14,7 +14,6 @@ void vPrintTask( void *pvParameters )
 {
     for( ;; )
     {
-        HAL_GPIO_TogglePin(LED_PORT, LED4_PIN);
         printf("Test String\n");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
@@ -57,12 +56,6 @@ int32_t setup(void){
 int main(void)
 {
     setup();
-    LED3_ON
-    while (1)
-    {
-        printf("Stuff\n");
-        HAL_Delay(1000);
-    }
 
     xTaskCreate(vBlinkTask, "blinkTask", 200, NULL, 1 /* [> priority <] */, NULL);
     xTaskCreate(vPrintTask, "printTask", 500, NULL, 1 /* [> priority <] */, NULL);
