@@ -9,13 +9,24 @@
 #include "main.h"
 #include "hardware.h"
 #include "stdio.h"
+#include "debug.h"
 
-void vPrintTask( void *pvParameters )
+void vPrintTask1( void *pvParameters )
 {
     for( ;; )
     {
-        printf("Test String\n");
+        /*printf("Test String\n");*/
+        DEBUG_PRINT("Test String1\n");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+void vPrintTask2( void *pvParameters )
+{
+    for( ;; )
+    {
+        /*printf("Test String\n");*/
+        DEBUG_PRINT("Test String2\n");
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
 
@@ -57,8 +68,10 @@ int main(void)
 {
     setup();
 
-    xTaskCreate(vBlinkTask, "blinkTask", 200, NULL, 1 /* [> priority <] */, NULL);
-    xTaskCreate(vPrintTask, "printTask", 500, NULL, 1 /* [> priority <] */, NULL);
+    xTaskCreate(vBlinkTask, "blinkTask", 100, NULL, 3 /* [> priority <] */, NULL);
+    xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 /* [> priority <] */, NULL);
+    xTaskCreate(vPrintTask2, "printTask2", 300, NULL, 2 /* [> priority <] */, NULL);
+    xTaskCreate(vDebugTask, "debugTask", 300, NULL, 1 /* [> priority <] */, NULL);
 
     vTaskStartScheduler();
 

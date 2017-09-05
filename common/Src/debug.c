@@ -7,8 +7,12 @@
 
 #include "pins_common.h"
 #include "pins.h"
+#include "debug.h"
+
+QueueHandle_t printQueue;
 
 #define UARTx_BAUD_RATE            115200
+#define UARTx_TIMEOUT              1000
 #define UARTx                      USART6
 
 #define UARTx_CLK_ENABLE           __HAL_RCC_USART6_CLK_ENABLE
@@ -27,7 +31,7 @@
 
 UART_HandleTypeDef UartHandle;
 
-void debug_init(void) {
+void uart_init(void) {
     GPIO_InitTypeDef  GPIO_InitStruct;
 
     /*##-1- Enable peripherals and GPIO Clocks #################################*/
@@ -71,13 +75,40 @@ void debug_init(void) {
     }
 
 }
-// Function to enable printf for debugging
-int _write(int file, char* data, int len) {
-    if (HAL_UART_Transmit(&UartHandle, (uint8_t*)data, len, 5000) != HAL_OK)
+
+void debug_init(void)
+{
+    uart_init();
+    printQueue = xQueueCreate(PRINT_QUEUE_LENGTH, PRINT_QUEUE_STRING_SIZE);
+    if (!printQueue)
     {
-        // TODO: Error handle
+        // TODO: Error Handle
         while(1);
     }
-    /*HAL_UART_Transmit(&UartHandle, (uint8_t*)data, len, DATA_SEND_TIMEOUT);*/
-    return len;
 }
+
+// Function to enable printf for debugging
+/*int _write(int file, char* data, int len) {*/
+    /*if (HAL_UART_Transmit(&UartHandle, (uint8_t*)data, len, 5000) != HAL_OK)*/
+    /*{*/
+        /*// TODO: Error handle*/
+        /*while(1);*/
+    /*}*/
+    /*return len;*/
+/*}*/
+
+
+void vDebugTask(void *pvParameters)
+{
+    char buffer[PRINT_QUEUE_STRING_SIZE] = {0};
+
+    for ( ;; )
+    {
+        if (xQueueReceive(printQueue, buffer, portMAX_DELAY) == pdTRUE)
+        {
+            int len = strlen(buffer);
+            HAL_UART_Transmit(&UartHandle, (uint8_t*)buffer, len, UARTx_TIMEOUT);
+        }
+    }
+}
+
