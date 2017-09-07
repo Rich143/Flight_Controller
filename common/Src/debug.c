@@ -5,6 +5,7 @@
 
 #include "stm32f4xx_hal.h"
 
+#include "fc.h"
 #include "pins_common.h"
 #include "pins.h"
 #include "debug.h"
@@ -70,8 +71,7 @@ void uart_init(void) {
 
     if(HAL_UART_Init(&UartHandle) != HAL_OK)
     {
-        // TODO: Error HANDLE
-        while(1);
+        Error_Handler();
     }
 
 }
@@ -82,8 +82,7 @@ void debug_init(void)
     printQueue = xQueueCreate(PRINT_QUEUE_LENGTH, PRINT_QUEUE_STRING_SIZE);
     if (!printQueue)
     {
-        // TODO: Error Handle
-        while(1);
+        Error_Handler();
     }
 }
 
@@ -91,8 +90,7 @@ void debug_init(void)
 /*int _write(int file, char* data, int len) {*/
     /*if (HAL_UART_Transmit(&UartHandle, (uint8_t*)data, len, 5000) != HAL_OK)*/
     /*{*/
-        /*// TODO: Error handle*/
-        /*while(1);*/
+        /*Error_Handler();*/
     /*}*/
     /*return len;*/
 /*}*/

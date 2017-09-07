@@ -1,4 +1,6 @@
 #include "stm32f4xx_hal.h"
+
+#include "fc.h"
 #include "hardware.h"
 #include "pins_common.h"
 #include "pins.h"
@@ -12,7 +14,7 @@
 #define I2Cx_FORCE_RESET()              __HAL_RCC_I2C1_FORCE_RESET()
 #define I2Cx_RELEASE_RESET()            __HAL_RCC_I2C1_RELEASE_RESET()
 
-#define I2Cx_SPEED                      400000
+#define I2Cx_SPEED                      50000
 
 /* Definition for I2Cx Pins */
 #define I2Cx_SCL_PIN                    GPIO_PIN_6
@@ -21,8 +23,6 @@
 #define I2Cx_SDA_PIN                    GPIO_PIN_7
 #define I2Cx_SDA_GPIO_PORT              GPIOB
 #define I2Cx_SDA_AF                     GPIO_AF4_I2C1
-
-#define I2C_ADDRESS        0x30F // Probably not needed
 
 I2C_HandleTypeDef I2cHandle;
 
@@ -54,7 +54,7 @@ void Clock_Config() {
 
     if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
     {
-        /*Error_Handler();*/
+        Error_Handler();
     }
 
     /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -66,7 +66,7 @@ void Clock_Config() {
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
     if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
     {
-        /*Error_Handler();*/
+        Error_Handler();
     }
 
     /* Enable appropriate peripheral clocks */
@@ -119,17 +119,16 @@ void setup_I2C() {
     I2cHandle.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
     I2cHandle.Init.ClockSpeed      = I2Cx_SPEED;
     I2cHandle.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    I2cHandle.Init.DutyCycle       = I2C_DUTYCYCLE_16_9;
+    I2cHandle.Init.DutyCycle       = I2C_DUTYCYCLE_2;
     I2cHandle.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
     I2cHandle.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
-    I2cHandle.Init.OwnAddress1     = I2C_ADDRESS;
-    I2cHandle.Init.OwnAddress2     = 0xFE;
+    I2cHandle.Init.OwnAddress1     = 0;
+    I2cHandle.Init.OwnAddress2     = 0;
 
     if(HAL_I2C_Init(&I2cHandle) != HAL_OK)
     {
         /* Initialization Error */
-        while(1);
-        /*Error_Handler();    */
+        Error_Handler();
     }
 }
 
@@ -157,7 +156,7 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
     GPIO_InitStruct.Pin       = I2Cx_SCL_PIN;
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Pull      = GPIO_PULLUP;
-    GPIO_InitStruct.Speed     = GPIO_SPEED_FAST;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = I2Cx_SCL_AF;
 
     HAL_GPIO_Init(I2Cx_SCL_GPIO_PORT, &GPIO_InitStruct);

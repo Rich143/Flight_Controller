@@ -2,14 +2,15 @@
 #include <stm32f4xx.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "stdio.h"
 
 #include "freertos.h"
 #include "task.h"
 
 #include "main.h"
 #include "hardware.h"
-#include "stdio.h"
 #include "debug.h"
+#include "pressureSensor.h"
 
 void vPrintTask1( void *pvParameters )
 {
@@ -36,7 +37,7 @@ void vBlinkTask( void *pvParameters )
     for( ;; )
     {
         HAL_GPIO_TogglePin(LED_PORT, LED3_PIN);
-        HAL_GPIO_TogglePin(LED_PORT, LED4_PIN);
+        /*HAL_GPIO_TogglePin(LED_PORT, LED4_PIN);*/
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 
@@ -72,6 +73,7 @@ int main(void)
     xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 /* [> priority <] */, NULL);
     xTaskCreate(vPrintTask2, "printTask2", 300, NULL, 2 /* [> priority <] */, NULL);
     xTaskCreate(vDebugTask, "debugTask", 300, NULL, 1 /* [> priority <] */, NULL);
+    xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 /* [> priority <] */, NULL);
 
     vTaskStartScheduler();
 

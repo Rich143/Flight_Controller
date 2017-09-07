@@ -1,6 +1,8 @@
 #ifndef PINS_H_
 #define PINS_H_
 
+#include "stm32f4xx_hal.h"
+
 #ifdef FC
 #define LED3_PIN GPIO_PIN_14
 #define LED4_PIN GPIO_PIN_15
