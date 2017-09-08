@@ -16,6 +16,11 @@ ELF_FILE = $(BIN_DIR)/$(BINARY_BASE_NAME).elf
 BIN_FILE = $(BIN_DIR)/$(BINARY_BASE_NAME).bin
 MAP_FILE = $(BIN_DIR)/$(BINARY_BASE_NAME).map
 
+DEPDIR := .d
+$(shell mkdir -p $(DEPDIR) >/dev/null)
+DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
+
+
 INCLUDE_DIRS= $(COMMON_LIB_DIR)/Inc \
 			  $(DRIVER_DIR)/Inc \
 			  $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Include \
@@ -52,7 +57,8 @@ ASSEMBLER_FLAGS=$(COMMON_FLAGS) -x assembler-with-cpp
 
 # -ffunction-sections and -fdata-sections, Place each function or data item into its own section in the output file
 #  This is to allow linking only used functions and data
-COMPILER_FLAGS=$(COMMON_FLAGS) -ffunction-sections -fdata-sections $(DEFINE_FLAGS) -Werror
+COMPILER_FLAGS=$(COMMON_FLAGS) -ffunction-sections -fdata-sections $(DEFINE_FLAGS) -Werror $(DEPFLAGS)
+POSTCOMPILE = @mv -f $(DEPDIR)/$*.Td $(DEPDIR)/$*.d && touch $@
 
 SRC := $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard stm32f4xx_hal_driver/Src/*.c) \
@@ -98,13 +104,17 @@ debug: connect
 .PHONY: clean test
 clean:
 	$(RM) $(BIN_BASE_DIR)
+	$(RM) $(DEPDIR)
 
 test:
 	cd test/; make run
 
 $(BIN_DIR)/%.o: %.c
+$(BIN_DIR)/%.o: %.c $(DEPDIR)/%.d
 	@mkdir -p $(dir $@)
+	@mkdir -p $(dir $(DEPDIR)/$^)
 	$(CC) $(COMPILER_FLAGS) $(INCLUDE_FLAGS) $< -o $@
+	$(POSTCOMPILE)
 
 $(BIN_DIR)/%.o: %.s
 	@mkdir -p $(dir $@)
@@ -113,3 +123,9 @@ $(BIN_DIR)/%.o: %.s
 $(BIN_DIR)/%.o: %.S
 	@mkdir -p $(dir $@)
 	$(CC) $(ASSEMBLER_FLAGS) $(INCLUDE_FLAGS) $< -o $@
+
+$(DEPDIR)/%.d: ;
+.PRECIOUS: $(DEPDIR)/%.d
+
+
+include $(wildcard $(patsubst %,$(DEPDIR)/%.d, $(basename $(SRC))))

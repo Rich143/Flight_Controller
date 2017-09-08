@@ -21,3 +21,4 @@ Doxyfile
 *_unittest
 *.a
 *.bak
+*.d
