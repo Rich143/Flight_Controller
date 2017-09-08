@@ -1,6 +1,7 @@
 #include "stm32f4xx_hal.h"
 #include "interrupt.h"
 #include "sched.h"
+#include "cmsis_os.h"
 
 /**
   * @brief  This function handles SysTick Handler.

@@ -52,7 +52,7 @@ ASSEMBLER_FLAGS=$(COMMON_FLAGS) -x assembler-with-cpp
 
 # -ffunction-sections and -fdata-sections, Place each function or data item into its own section in the output file
 #  This is to allow linking only used functions and data
-COMPILER_FLAGS=$(COMMON_FLAGS) -ffunction-sections -fdata-sections $(DEFINE_FLAGS)
+COMPILER_FLAGS=$(COMMON_FLAGS) -ffunction-sections -fdata-sections $(DEFINE_FLAGS) -Werror
 
 SRC := $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard stm32f4xx_hal_driver/Src/*.c) \
