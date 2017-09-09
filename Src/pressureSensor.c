@@ -39,6 +39,13 @@
 FC_Status PressureSensor_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
     HAL_StatusTypeDef rc;
+
+    if (size > 1)
+    {
+        // Enable auto increment
+        regAddress |= _BIT(7);
+    }
+
     rc = HAL_I2C_Mem_Read(&I2cHandle, PRESSURE_SENSOR_ADDRESS_HAL,
                           regAddress,
                           I2C_MEMADD_SIZE_8BIT, val, size,
@@ -117,12 +124,7 @@ FC_Status pressureSensor_GetTemp(int16_t *Tout)
     int16_t raw_data;
     uint8_t buffer[2];
 
-    if (PressureSensor_RegRead(PRESSURE_TEMP_OUT_L, &(buffer[0]), 1) != FC_OK)
-    {
-        DEBUG_PRINT("Error reading temp\n");
-        return FC_ERROR;
-    }
-    if (PressureSensor_RegRead(PRESSURE_TEMP_OUT_H, &(buffer[1]), 1) != FC_OK)
+    if (PressureSensor_RegRead(PRESSURE_TEMP_OUT_L, buffer, 2) != FC_OK)
     {
         DEBUG_PRINT("Error reading temp\n");
         return FC_ERROR;
