@@ -12,7 +12,7 @@ extern QueueHandle_t printQueue;
 #define PRINT_QUEUE_STRING_SIZE   40
 #define QUEUE_SEND_TIMEOUT_TICKS  10
 
-#define printf DONT USE PRINTF, USE DEBUG_PRINT
+//#define printf DONT USE PRINTF, USE DEBUG_PRINT
 
 /** 
  * @brief Send a debug string to the uart

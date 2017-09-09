@@ -86,14 +86,14 @@ void debug_init(void)
     }
 }
 
-// Function to enable printf for debugging
-/*int _write(int file, char* data, int len) {*/
-    /*if (HAL_UART_Transmit(&UartHandle, (uint8_t*)data, len, 5000) != HAL_OK)*/
-    /*{*/
-        /*Error_Handler();*/
-    /*}*/
-    /*return len;*/
-/*}*/
+ /*Function to enable printf for debugging*/
+int _write(int file, char* data, int len) {
+    if (HAL_UART_Transmit(&UartHandle, (uint8_t*)data, len, 5000) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    return len;
+}
 
 
 void vDebugTask(void *pvParameters)
