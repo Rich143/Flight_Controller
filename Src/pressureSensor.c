@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include "freertos.h"
 #include "task.h"
 
@@ -17,24 +19,28 @@
 //
 // Registers and Values
 //
-#define PRESSURE_REG_WHOAMI    0x0F
+#define PRESSURE_REG_WHOAMI             0x0F
 #define PRESSURE_SENSOR_WHOAMI_RESPONSE 0xBD
 
-#define PRESSURE_CTRL_REG1     0x20
-#define PD 7
-#define ODR2 6
-#define ODR1 5
-#define ODR0 4
-#define DIFF_EN 3
-#define BDU 2
-#define RESET_AZ 1
-#define SIM 0
+#define PRESSURE_CTRL_REG1              0x20
+#define PD                          7
+#define ODR2                        6
+#define ODR1                        5
+#define ODR0                        4
+#define DIFF_EN                     3
+#define BDU                         2
+#define RESET_AZ                    1
+#define SIM                         0
 
 #define PRESSURE_CTRL_REG2              0x21
-#define SWRESET 2
+#define SWRESET                     2
 
-#define PRESSURE_TEMP_OUT_L 0x2B
-#define PRESSURE_TEMP_OUT_H 0x2C
+#define PRESSURE_TEMP_OUT_L             0x2B
+#define PRESSURE_TEMP_OUT_H             0x2C
+
+#define PRESSURE_PRESS_OUT_XL           0x28
+#define PRESSURE_PRESS_OUT_L            0x29
+#define PRESSURE_PRESS_OUT_H            0x2A
 
 FC_Status PressureSensor_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
@@ -141,6 +147,82 @@ FC_Status pressureSensor_GetTemp(int16_t *Tout)
     return FC_OK;
 }
 
+
+/**
+ * @brief Get the Pressure value in hPa
+ *
+ * @param Pout The pressure values in 100 x hPa, aka Pa
+ *
+ * @return Status [FC_OK, FC_ERROR]
+ */
+FC_Status pressureSensor_GetPressure(int32_t *Pout)
+{
+    uint8_t buffer[3];
+    uint32_t tmp = 0;
+    int32_t raw_pressure;
+
+    if (PressureSensor_RegRead(PRESSURE_PRESS_OUT_XL, buffer, 3) != FC_OK)
+    {
+        DEBUG_PRINT("Error reading pressure\n");
+        return FC_ERROR;
+    }
+
+    for (uint8_t i=0; i<3; i++)
+    {
+        tmp |= (((uint32_t)buffer[i]) << (8*i));
+    }
+
+    if (tmp & 0x00800000)
+    {
+        tmp |= 0xFF000000;
+    }
+
+    raw_pressure = ((int32_t)tmp);
+
+    // Resolution 4096 LSB / hPa
+    *Pout = (raw_pressure*100)/4096;
+
+    return FC_OK;
+}
+
+/**
+ * @brief Get the pressure from the pressure sensor, and convert to altitude
+ *
+ * @param altitude_out The altitude in meters x 100
+ *
+ * @return Status [FC_OK, FC_ERROR]
+ */
+FC_Status pressureSensor_GetAltitude(int32_t *altitude_out)
+{
+    /*const float T0 = 288.15;*/
+    const float P0 = 101325.0;
+    /*const float g  = 9.80655;*/
+    /*const float L  = -0.0065;*/
+    /*const float R  = 287.053;*/
+
+    const float term1 = -44330.76923;
+    const float term2 = 0.1902651289;
+
+    float P = 0.0;
+    int32_t Pressure;
+
+    if (pressureSensor_GetPressure(&Pressure) != FC_OK)
+    {
+        return FC_ERROR;
+    }
+
+    P = (float)Pressure;
+
+    float altitude = term1*(powf((P/P0),term2)-1);
+    /*float altitude = (T0/L)*(powf((P/P0),((-L*R)/g))-1);*/ // Full equation
+
+    altitude *= 100;
+
+    (*altitude_out) = (int32_t)altitude;
+
+    return FC_OK;
+}
+
 void vPressureSensorTask(void *pvParameters)
 {
     DEBUG_PRINT("Starting pressure sensor task\n");
@@ -151,13 +233,23 @@ void vPressureSensorTask(void *pvParameters)
     DEBUG_PRINT("Initialized pressure sensor\n");
 
     int16_t Temp;
+    int32_t Pressure;
+    int32_t Altitude;
     for ( ;; )
     {
         if (pressureSensor_GetTemp(&Temp) != FC_OK) {
             // Maybe do something???
         }
+        if (pressureSensor_GetPressure(&Pressure) != FC_OK) {
+            // Maybe do something???
+        }
+        if (pressureSensor_GetAltitude(&Altitude) != FC_OK) {
+            // Maybe do something???
+        }
 
         DEBUG_PRINT("Temp: %d\n", Temp);
+        DEBUG_PRINT("Pessure: %ld\n", Pressure);
+        DEBUG_PRINT("Altitude: %ld\n", Altitude);
 
         /*vTaskDelay(ODR_PERIOD_MS / portTICK_PERIOD_MS);*/
         vTaskDelay(1000 / portTICK_PERIOD_MS);
