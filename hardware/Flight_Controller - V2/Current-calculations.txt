@@ -1,0 +1,9 @@
+Current required:
+LSM9DS1 = 4.3 mA
+LPS25HB = 25 uA
+RN2483 = 38.9 mA ~= 40 mA
+STM32F072RB = 120 mA
+4 x LEDs = 1.1 mA x 4 = 4.4 mA
+
+
+Total = 168.7 mA

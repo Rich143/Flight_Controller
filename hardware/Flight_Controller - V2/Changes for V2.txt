@@ -1,0 +1,11 @@
+Changes for V2:
+
+Tent all vias (or at least ones under chips and ones that could easily short
+rgb leds?
+more test points
+pullup on reset button
+maybe larger holes for connector
+longer pads on lga chips
+I2C vs SPI?
+SPI broken out for SD Card logging
+reverse polarity protection

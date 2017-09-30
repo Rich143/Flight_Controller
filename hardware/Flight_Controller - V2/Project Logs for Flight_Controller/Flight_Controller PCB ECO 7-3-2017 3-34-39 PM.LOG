@@ -1,0 +1,4 @@
+Removed Pin From Net: NetName=RF_COM_RX Pin=P2-2
+Removed Pin From Net: NetName=RF_COM_TX Pin=P2-3
+Added Pin To Net: NetName=RF_COM_TX Pin=P2-2
+Added Pin To Net: NetName=RF_COM_RX Pin=P2-3

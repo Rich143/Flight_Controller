@@ -1,0 +1,6 @@
+Removed Pin From Net: NetName=LED1 Pin=TPS15-1
+Removed Pin From Net: NetName=LED2 Pin=TPS17-1
+Removed Pin From Net: NetName=LED3 Pin=TPS19-1
+Removed Pin From Net: NetName=LED4 Pin=TPS20-1
+Removed Pin From Net: NetName=PB11 Pin=TPS31-1
+Removed Pin From Net: NetName=PB10 Pin=TPS32-1

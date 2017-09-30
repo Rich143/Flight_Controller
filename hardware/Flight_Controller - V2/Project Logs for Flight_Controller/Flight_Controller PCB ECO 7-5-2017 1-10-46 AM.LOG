@@ -1,0 +1,6 @@
+Added Component: Designator=TPS1(TEST_POINT_SMD)
+Add component. Clean all parameters for all variants
+Added Component: Designator=TPS2(TEST_POINT_SMD)
+Add component. Clean all parameters for all variants
+Added Pin To Net: NetName=SENSOR_SCL Pin=TPS1-1
+Added Pin To Net: NetName=SENSOR_SDA Pin=TPS2-1

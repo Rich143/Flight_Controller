@@ -1,0 +1,34 @@
+Removed Pin From Net: NetName=GND Pin=C11-1
+Removed Pin From Net: NetName=VDD Pin=C11-2
+Removed Pin From Net: NetName=GND Pin=C12-1
+Removed Pin From Net: NetName=VDD Pin=C12-2
+Removed Pin From Net: NetName=GND Pin=C13-1
+Removed Pin From Net: NetName=VDD Pin=C13-2
+Removed Pin From Net: NetName=GND Pin=C14-1
+Removed Pin From Net: NetName=VDD Pin=C14-2
+Removed Pin From Net: NetName=GND Pin=U3-1
+Removed Pin From Net: NetName=RF_COM_TX Pin=U3-6
+Removed Pin From Net: NetName=RF_COM_RX Pin=U3-7
+Removed Pin From Net: NetName=GND Pin=U3-8
+Removed Pin From Net: NetName=GND Pin=U3-11
+Removed Pin From Net: NetName=VDD Pin=U3-12
+Removed Pin From Net: NetName=GND Pin=U3-20
+Removed Pin From Net: NetName=GND Pin=U3-21
+Removed Pin From Net: NetName=GND Pin=U3-22
+Removed Pin From Net: NetName=GND Pin=U3-24
+Removed Pin From Net: NetName=GND Pin=U3-26
+Removed Pin From Net: NetName=GND Pin=U3-27
+Removed Pin From Net: NetName=GND Pin=U3-28
+Removed Pin From Net: NetName=GND Pin=U3-33
+Removed Pin From Net: NetName=VDD Pin=U3-34
+Removed Pin From Net: NetName=GND Pin=U3-41
+Removed Pin From Net: NetName=GND Pin=U3-47
+Added Component: Designator=P2(HDR1X4)
+Add component. Clean all parameters for all variants
+Add component (AddParameter): Name = "LatestRevisionDate"; Value = "17-Jul-2002"; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "LatestRevisionNote"; Value = "Re-released for DXP Platform."; VariantName = "[No Variations]"
+Add component (AddParameter): Name = "Publisher"; Value = "Altium Limited"; VariantName = "[No Variations]"
+Added Pin To Net: NetName=VDD Pin=P2-1
+Added Pin To Net: NetName=RF_COM_RX Pin=P2-2
+Added Pin To Net: NetName=RF_COM_TX Pin=P2-3
+Added Pin To Net: NetName=GND Pin=P2-4

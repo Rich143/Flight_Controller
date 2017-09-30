@@ -1,0 +1,12 @@
+Removed Pin From Net: NetName=DRDY_B Pin=U2-52
+Removed Pin From Net: NetName=INT_M Pin=U2-53
+Removed Pin From Net: NetName=INT1_A/G Pin=U2-54
+Removed Pin From Net: NetName=INT2_A/G Pin=U2-55
+Removed Pin From Net: NetName=DRDY_M Pin=U2-56
+Removed Pin From Net: NetName=DEN_A/G Pin=U2-57
+Added Pin To Net: NetName=DEN_A/G Pin=U2-51
+Added Pin To Net: NetName=INT2_A/G Pin=U2-52
+Added Pin To Net: NetName=INT1_A/G Pin=U2-53
+Added Pin To Net: NetName=INT_M Pin=U2-54
+Added Pin To Net: NetName=DRDY_M Pin=U2-55
+Added Pin To Net: NetName=DRDY_B Pin=U2-62
