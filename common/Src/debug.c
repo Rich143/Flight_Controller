@@ -71,7 +71,7 @@ void uart_init(void) {
 
     if(HAL_UART_Init(&UartHandle) != HAL_OK)
     {
-        Error_Handler();
+        Error_Handler("UART init fail");
     }
 
 }
@@ -82,7 +82,7 @@ void debug_init(void)
     printQueue = xQueueCreate(PRINT_QUEUE_LENGTH, PRINT_QUEUE_STRING_SIZE);
     if (!printQueue)
     {
-        Error_Handler();
+        Error_Handler("no print queue");
     }
 }
 
@@ -90,7 +90,7 @@ void debug_init(void)
 int _write(int file, char* data, int len) {
     if (HAL_UART_Transmit(&UartHandle, (uint8_t*)data, len, 5000) != HAL_OK)
     {
-        Error_Handler();
+        DEBUG_PRINT("Uart Transmit failure\n");
     }
     return len;
 }

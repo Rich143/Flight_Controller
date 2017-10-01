@@ -31,17 +31,17 @@ TEST_DIR = .
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
-CPPFLAGS += -isystem $(GTEST_DIR)/include -I $(INC_DIR) -DUNIT_TEST_BUILD
+CPPFLAGS += -isystem $(GTEST_DIR)/include -I $(INC_DIR) -D__UNIT_TEST
 
 # Flags passed to the C++ compiler.
 CXXFLAGS += -g -Wall -Wextra -pthread
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TEST_SRC = fake_logic_unittest.c pid_unittest.c rate_control_unittest.c
+TEST_SRC = fake_logic_unittest.c pid_unittest.c rate_control_unittest.c pressure_sensor_unittest.c
 
 # All src files tested
-TESTED_SRC_FILES = fake_logic.c pid.c rate_control.c
+TESTED_SRC_FILES = fake_logic.c pid.c rate_control.c pressureSensor.c fc.c
 TESTED_SRC_FILES := $(addprefix $(SRC_DIR)/, $(TESTED_SRC_FILES))
 
 TESTED_OBJS := $(TESTED_SRC_FILES:%.c=$(BIN_DIR)/%.o)

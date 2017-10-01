@@ -7,6 +7,7 @@
 #include "freertos.h"
 #include "task.h"
 
+#include "fc.h"
 #include "main.h"
 #include "hardware.h"
 #include "debug.h"
@@ -16,7 +17,6 @@ void vPrintTask1( void *pvParameters )
 {
     for( ;; )
     {
-        /*printf("Test String\n");*/
         DEBUG_PRINT("Test String1\n");
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
@@ -25,7 +25,6 @@ void vPrintTask2( void *pvParameters )
 {
     for( ;; )
     {
-        /*printf("Test String\n");*/
         DEBUG_PRINT("Test String2\n");
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }

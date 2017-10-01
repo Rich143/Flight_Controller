@@ -1,7 +1,10 @@
 #include "pid.h"
+#include "fc.h"
 
 int satLimit(int val, int min, int max, int *saturated)
 {
+    ASSERT(saturated);
+
     if (val < min) {
         (*saturated) = -1;
         return min;
@@ -28,6 +31,10 @@ int limit(int val, int min, int max)
 int controlLoop(int error, ControlInfo_t *info, PID_Gains_t *gain,
                 Limits_t* limits)
 {
+    ASSERT(gain);
+    ASSERT(info);
+    ASSERT(limits);
+
     if ((info->saturated > 0 && error > 0)
         || (info->saturated < 0 && error < 0)) {
         // Do Nothing

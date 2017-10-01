@@ -1,3 +1,4 @@
+#include "fc.h"
 #include "pid.h"
 #include "rate_control.h"
 #include "string.h"
@@ -35,7 +36,7 @@ ControlInfo_t yawInfo = {
     0
 };
 
-RotationAxisOutputs_t rotationOutputs = {0};
+RotationAxisOutputs_t rotationOutputs = {0,0,0};
 
 void resetRateInfo()
 {
@@ -47,6 +48,9 @@ void resetRateInfo()
 
 RotationAxisOutputs_t* controlRates(Rates_t* actualRates, Rates_t* desiredRates)
 {
+    ASSERT(actualRates);
+    ASSERT(desiredRates);
+
     int rollError = desiredRates->roll - actualRates->roll;
     int pitchError = desiredRates->pitch - actualRates->pitch;
     int yawError =  desiredRates->yaw - actualRates->yaw;

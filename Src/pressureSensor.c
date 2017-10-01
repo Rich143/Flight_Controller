@@ -1,12 +1,16 @@
 #include <math.h>
+#include "fc.h"
+
+#ifndef __UNIT_TEST
 
 #include "freertos.h"
 #include "task.h"
 
-#include "fc.h"
 #include "pressureSensor.h"
 #include "hardware.h"
 #include "debug.h"
+
+#endif
 
 #define PRESSURE_SENSOR_I2C_TIMEOUT 1000
 
@@ -42,6 +46,7 @@
 #define PRESSURE_PRESS_OUT_L            0x29
 #define PRESSURE_PRESS_OUT_H            0x2A
 
+#ifndef __UNIT_TEST
 FC_Status PressureSensor_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
     HAL_StatusTypeDef rc;
@@ -118,6 +123,12 @@ FC_Status pressureSensorInit(void)
     return FC_OK;
 }
 
+#else
+// Prototypes for functions we want to mock
+FC_Status PressureSensor_RegRead(uint8_t regAddress, uint8_t *val, int size);
+FC_Status PressureSensor_RegWrite(uint8_t regAddress, uint8_t val);
+#endif /* ndefined(__UNIT_TEST) */
+
 /**
  * @brief Get the temperature in ˚C.
  *
@@ -157,6 +168,8 @@ FC_Status pressureSensor_GetTemp(int16_t *Tout)
  */
 FC_Status pressureSensor_GetPressure(int32_t *Pout)
 {
+    ASSERT(Pout);
+
     uint8_t buffer[3];
     uint32_t tmp = 0;
     int32_t raw_pressure;
@@ -194,6 +207,8 @@ FC_Status pressureSensor_GetPressure(int32_t *Pout)
  */
 FC_Status pressureSensor_GetAltitude(int32_t *altitude_out)
 {
+    ASSERT(altitude_out);
+
     /*const float T0 = 288.15;*/
     const float P0 = 101325.0;
     /*const float g  = 9.80655;*/
@@ -223,12 +238,13 @@ FC_Status pressureSensor_GetAltitude(int32_t *altitude_out)
     return FC_OK;
 }
 
+#ifndef __UNIT_TEST
 void vPressureSensorTask(void *pvParameters)
 {
     DEBUG_PRINT("Starting pressure sensor task\n");
     if (pressureSensorInit() != FC_OK)
     {
-        Error_Handler();
+        Error_Handler("pressure init fail\n");
     }
     DEBUG_PRINT("Initialized pressure sensor\n");
 
@@ -255,3 +271,5 @@ void vPressureSensorTask(void *pvParameters)
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
+
+#endif /* ndefined(__UNIT_TEST) */

@@ -54,7 +54,7 @@ void Clock_Config() {
 
     if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
     {
-        Error_Handler();
+        Error_Handler("Osc config fail");
     }
 
     /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -66,7 +66,7 @@ void Clock_Config() {
     RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
     if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
     {
-        Error_Handler();
+        Error_Handler("Clock config fail");
     }
 
     /* Enable appropriate peripheral clocks */
@@ -118,7 +118,7 @@ void ClockHSE_Config(void)
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler("Clock config fail");
   }
 
   /* -2- Enable HSE Oscillator, select it as PLL source and finally activate the PLL */
@@ -136,7 +136,7 @@ void ClockHSE_Config(void)
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     /* Initialization Error */
-    Error_Handler();
+    Error_Handler("Osc config fail");
   }
 
   /* Select PLL as system clock source and configure the HCLK, PCLK1 and PCLK2
@@ -148,7 +148,7 @@ void ClockHSE_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler("Clock Config fail");
   }
 
   /* -4- Optional: Disable HSI Oscillator (if the HSI is no more needed by the application) */
@@ -158,7 +158,7 @@ void ClockHSE_Config(void)
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     /* Initialization Error */
-    Error_Handler();
+    Error_Handler("Osc config fail");
   }
 }
 
@@ -210,7 +210,7 @@ void setup_I2C() {
     if(HAL_I2C_Init(&I2cHandle) != HAL_OK)
     {
         /* Initialization Error */
-        Error_Handler();
+        Error_Handler("I2C init fail");
     }
 }
 
