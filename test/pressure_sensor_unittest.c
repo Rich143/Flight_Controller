@@ -33,7 +33,7 @@ TEST(TemperatureTest, Test25C)
 
     int16_t Temp;
 
-    pressureSensor_GetTemp(&Temp);
+    EXPECT_EQ(FC_OK, pressureSensor_GetTemp(&Temp));
     EXPECT_EQ(250, Temp);
 }
 
@@ -49,7 +49,7 @@ TEST(TemperatureTest, TestNeg25C)
 
     int16_t Temp;
 
-    pressureSensor_GetTemp(&Temp);
+    EXPECT_EQ(FC_OK, pressureSensor_GetTemp(&Temp));
     EXPECT_EQ(-250, Temp);
 }
 
@@ -65,6 +65,40 @@ TEST(TemperatureTest, TestZero)
 
     int16_t Temp;
 
-    pressureSensor_GetTemp(&Temp);
+    EXPECT_EQ(FC_OK, pressureSensor_GetTemp(&Temp));
     EXPECT_EQ(0, Temp);
+}
+
+TEST(PressureTest, TestSeaLevel)
+{
+    // pressure = raw*100/4096
+    // raw = pressure*4096/100
+    // Sea level = 101325 Pa
+    // raw = 4150272
+    // binary: 00111111 01010100 00000000
+    regVal[0] = 0b00000000;
+    regVal[1] = 0b01010100;
+    regVal[2] = 0b00111111;
+    
+    int32_t Pout;
+
+    EXPECT_EQ(FC_OK, pressureSensor_GetPressure(&Pout));
+    EXPECT_EQ(101325, Pout);
+}
+
+TEST(AltitudeTest, TestSeaLevel)
+{
+    // pressure = raw*100/4096
+    // raw = pressure*4096/100
+    // Sea level = 101325 Pa
+    // raw = 4150272
+    // binary: 00111111 01010100 00000000
+    regVal[0] = 0b00000000;
+    regVal[1] = 0b01010100;
+    regVal[2] = 0b00111111;
+    
+    int32_t altitude;
+
+    EXPECT_EQ(FC_OK, pressureSensor_GetAltitude(&altitude));
+    EXPECT_EQ(0, altitude);
 }
