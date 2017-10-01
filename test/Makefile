@@ -1,6 +1,5 @@
-# A sample Makefile for building Google Test and using it in user
-# tests.  Please tweak it to suit your environment and project.  You
-# may want to move it to your project's root directory.
+# A Makefile for building Google Test and using it in user
+# tests.
 #
 # SYNOPSIS:
 #
@@ -49,7 +48,6 @@ TESTED_SRC_FILES := $(addprefix $(SRC_DIR)/, $(TESTED_SRC_FILES))
 
 TESTED_OBJS := $(addprefix $(BIN_DIR)/$(TESTED_OBJS_DIR)/, $(addsuffix .o,$(notdir $(basename $(TESTED_SRC_FILES)))))
 
-#TESTED_OBJS := $(TESTED_SRC_FILES:$(SRC)/%.c=$(BIN_DIR)/$(TESTED_OBJS_DIR)/%.o)
 TEST_OBJS := $(TEST_SRC:%.c=$(BIN_DIR)/%.o)
 
 # All Google Test headers.  Usually you shouldn't change this
