@@ -25,6 +25,9 @@ GTEST_DIR = ../common/googletest/googletest
 SRC_DIR = ../Src
 INC_DIR = ../Inc
 
+# Where to put user code objects
+TESTED_OBJS_DIR = Tested_Objs
+
 # Where to find test code.
 TEST_DIR = .
 
@@ -44,7 +47,9 @@ TEST_SRC = fake_logic_unittest.c pid_unittest.c rate_control_unittest.c pressure
 TESTED_SRC_FILES = fake_logic.c pid.c rate_control.c pressureSensor.c fc.c
 TESTED_SRC_FILES := $(addprefix $(SRC_DIR)/, $(TESTED_SRC_FILES))
 
-TESTED_OBJS := $(TESTED_SRC_FILES:%.c=$(BIN_DIR)/%.o)
+TESTED_OBJS := $(addprefix $(BIN_DIR)/$(TESTED_OBJS_DIR)/, $(addsuffix .o,$(notdir $(basename $(TESTED_SRC_FILES)))))
+
+#TESTED_OBJS := $(TESTED_SRC_FILES:$(SRC)/%.c=$(BIN_DIR)/$(TESTED_OBJS_DIR)/%.o)
 TEST_OBJS := $(TEST_SRC:%.c=$(BIN_DIR)/%.o)
 
 # All Google Test headers.  Usually you shouldn't change this
@@ -90,6 +95,10 @@ $(BIN_DIR)/gtest.a : $(BIN_DIR)/gtest-all.o
 
 $(BIN_DIR)/gtest_main.a : $(BIN_DIR)/gtest-all.o $(BIN_DIR)/gtest_main.o
 	$(AR) $(ARFLAGS) $@ $^
+
+$(BIN_DIR)/$(TESTED_OBJS_DIR)/%.o : $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 $(BIN_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
