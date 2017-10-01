@@ -13,8 +13,10 @@ void assertFailed(char *file, int line);
         assertFailed(__FILE__, __LINE__)
 
 #else
+#include <stdint.h>
 #include <assert.h>
 #define ASSERT assert
+
 #include <stdio.h>
 #define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #endif
