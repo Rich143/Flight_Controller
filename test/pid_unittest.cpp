@@ -1,5 +1,8 @@
-#include "pid.h"
 #include "gtest/gtest.h"
+
+extern "C" {
+#include "pid.h"
+}
 
 class PIDTest : public ::testing::Test {
     protected:

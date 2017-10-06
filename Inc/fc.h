@@ -1,6 +1,10 @@
 #ifndef __FC_H
 #define __FC_H
 
+#ifndef __UNIT_TEST
+#include "stm32f4xx.h"
+#endif
+
 #define _BIT(x) (1<<(x))
 
 void assertFailed(char *file, int line);

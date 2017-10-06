@@ -1,6 +1,8 @@
 #ifndef __ACCELEROMETER_H
 #define __ACCELEROMETER_H
 
+#include "fc.h"
+
 typedef struct Accel_t {
     int32_t x;
     int32_t y;

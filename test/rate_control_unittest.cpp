@@ -1,5 +1,8 @@
-#include "rate_control.h"
 #include "gtest/gtest.h"
+
+extern "C" {
+#include "rate_control.h"
+}
 
 #define limitCheck(roll, pitch, yaw) \
     EXPECT_LE((roll), ROTATION_AXIS_OUTPUT_MAX); \

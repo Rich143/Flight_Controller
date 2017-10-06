@@ -1,7 +1,9 @@
 #include "gtest/gtest.h"
+extern "C" {
 #include "fc.h"
 #include "calculateAttitude.h"
 #include "accelerometer.h"
+}
 
 TEST(AttitudeTest, testLevel)
 {

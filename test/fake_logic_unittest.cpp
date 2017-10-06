@@ -1,5 +1,8 @@
-#include "fake_logic.h"
 #include "gtest/gtest.h"
+
+extern "C" {
+#include "fake_logic.h"
+}
 
 // Tests valid values
 TEST(FakeLogicTest, HandlesValidInput) {

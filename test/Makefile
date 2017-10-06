@@ -10,6 +10,8 @@
 # Please tweak the following variable definitions as needed by your
 # project, except GTEST_HEADERS, which you can use in your own targets
 # but shouldn't modify.
+CC = gcc
+CXX = g++
 
 # Where to store our generated binaries
 BIN_DIR = Bin
@@ -30,10 +32,21 @@ TESTED_OBJS_DIR = Tested_Objs
 # Where to find test code.
 TEST_DIR = .
 
+INCLUDE_DIRS = $(INC_DIR) \
+			   . \
+
+INCLUDE_FLAGS := $(addprefix -I,$(INCLUDE_DIRS))
+INCLUDE_FLAGS += -isystem $(GTEST_DIR)/include
+
+DEFINES := "__UNIT_TEST"
+DEFINE_FLAGS := $(addprefix -D,$(DEFINES))
+
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
-CPPFLAGS += -isystem $(GTEST_DIR)/include -I $(INC_DIR) -D__UNIT_TEST
+CPPFLAGS += $(INCLUDE_FLAGS) $(DEFINE_FLAGS)
+
+CFLAGS = $(CPPFLAGS) -g -Wall -Wextra
 
 # Flags passed to the C++ compiler.
 CXXFLAGS += -g -Wall -Wextra -pthread
@@ -96,9 +109,9 @@ $(BIN_DIR)/gtest_main.a : $(BIN_DIR)/gtest-all.o $(BIN_DIR)/gtest_main.o
 
 $(BIN_DIR)/$(TESTED_OBJS_DIR)/%.o : $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BIN_DIR)/%.o: %.c
+$(BIN_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
