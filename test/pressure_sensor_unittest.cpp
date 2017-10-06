@@ -135,6 +135,7 @@ TEST_F(PressureTest, TestSeaLevel)
     int32_t Pout;
 
     EXPECT_EQ(FC_OK, pressureSensor_GetPressure(&Pout));
+    EXPECT_EQ(PRESSURE_PRESS_OUT_XL, PressureSensor_RegRead_fake.arg0_history[0]);
     EXPECT_EQ(101325, Pout);
 }
 
@@ -152,5 +153,6 @@ TEST_F(AltitudeTest, TestSeaLevel)
     int32_t altitude;
 
     EXPECT_EQ(FC_OK, pressureSensor_GetAltitude(&altitude));
+    EXPECT_EQ(PRESSURE_PRESS_OUT_XL, PressureSensor_RegRead_fake.arg0_history[0]);
     EXPECT_EQ(0, altitude);
 }
