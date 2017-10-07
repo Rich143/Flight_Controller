@@ -44,7 +44,7 @@ DEFINE_FLAGS := $(addprefix -D,$(DEFINES))
 # Flags passed to the preprocessor.
 # Set Google Test's header directory as a system directory, such that
 # the compiler doesn't generate warnings in Google Test headers.
-CPPFLAGS += $(INCLUDE_FLAGS) $(DEFINE_FLAGS)
+CPPFLAGS += $(INCLUDE_FLAGS) $(DEFINE_FLAGS) -std=c99
 
 CFLAGS = $(CPPFLAGS) -g -Wall -Wextra
 
