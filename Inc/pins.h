@@ -4,6 +4,13 @@
 #include "stm32f4xx_hal.h"
 
 #ifdef FC
+#define LED_G_PIN GPIO_PIN_15
+#define LED_G_PORT GPIOB
+#define LED_R_PIN GPIO_PIN_9
+#define LED_R_PORT GPIOC
+#define LED_B_PIN GPIO_PIN_8
+#define LED_B_PORT GPIOC
+
 #define LED3_PIN GPIO_PIN_14
 #define LED4_PIN GPIO_PIN_15
 #define LED_PORT GPIOB
