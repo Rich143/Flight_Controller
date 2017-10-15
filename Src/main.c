@@ -32,7 +32,6 @@ void vPrintTask2( void *pvParameters )
 
 void vBlinkTask( void *pvParameters )
 {
-    LED3_ON
     for( ;; )
     {
         rgbSetColour(RGB_GREEN);

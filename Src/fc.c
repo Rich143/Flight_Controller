@@ -9,7 +9,7 @@ void Error_Handler(char *msg)
     // Disable interrupts. This ensures we don't get interrupted while
     // printing the error message, and that we can block all tasks
     taskDISABLE_INTERRUPTS();
-    LED4_ON
+    LED1_ON
     printf("Err:%s\n", msg == NULL ? "" : msg);
     while (1);
 }

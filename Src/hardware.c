@@ -187,6 +187,12 @@ void setup_outputs() {
     GPIO_InitStruct.Pin = LED_PIN;
     HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 #elif defined(FC)
+    GPIO_InitStruct.Pin = LED1_PIN;
+    HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = LED2_PIN;
+    HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+
     GPIO_InitStruct.Pin = LED3_PIN;
     HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 
