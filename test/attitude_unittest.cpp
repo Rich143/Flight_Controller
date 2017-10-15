@@ -2,7 +2,7 @@
 extern "C" {
 #include "fc.h"
 #include "calculateAttitude.h"
-#include "accelerometer.h"
+#include "imu.h"
 }
 
 TEST(AttitudeTest, testLevel)

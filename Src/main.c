@@ -11,6 +11,7 @@
 #include "main.h"
 #include "hardware.h"
 #include "debug.h"
+#include "imu.h"
 #include "pressureSensor.h"
 
 void vPrintTask1( void *pvParameters )
@@ -75,10 +76,11 @@ int main(void)
     printf("Switched to HSE Clock\n");
 
     xTaskCreate(vBlinkTask, "blinkTask", 100, NULL, 3 /* priority */, NULL);
-    xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 /* priority */, NULL);
-    xTaskCreate(vPrintTask2, "printTask2", 300, NULL, 2 /* priority */, NULL);
+    /*xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 [> priority <], NULL);*/
+    /*xTaskCreate(vPrintTask2, "printTask2", 300, NULL, 2 [> priority <], NULL);*/
     xTaskCreate(vDebugTask, "debugTask", 300, NULL, 1 /* priority */, NULL);
-    xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 /* priority */, NULL);
+    /*xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 [> priority <], NULL);*/
+    xTaskCreate(vIMUTask, "IMUTask", 300, NULL, 4 /* priority */, NULL);
 
     vTaskStartScheduler();
 

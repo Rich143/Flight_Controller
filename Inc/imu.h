@@ -1,5 +1,5 @@
-#ifndef __ACCELEROMETER_H
-#define __ACCELEROMETER_H
+#ifndef __IMU_H
+#define __IMU_H
 
 #include "fc.h"
 
@@ -9,4 +9,5 @@ typedef struct Accel_t {
     int32_t z;
 } Accel_t;
 
-#endif /*defined(__ACCELEROMTER_H)*/
+void vIMUTask(void *pvParameters);
+#endif /*defined(__IMU_H)*/

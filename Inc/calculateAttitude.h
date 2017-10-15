@@ -1,7 +1,7 @@
 #ifndef __CALCULATE_ATTITUDE_H
 #define __CALCULATE_ATTITUDE_H
 
-#include "accelerometer.h"
+#include "imu.h"
 
 /** 
  * @brief Struct to hold the attitude of the quad
