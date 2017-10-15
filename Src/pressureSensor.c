@@ -59,6 +59,7 @@ FC_Status pressureSensorInit(void)
     if (PressureSensor_RegRead(PRESSURE_REG_WHOAMI, &whoami, 1 /* 1 byte read */)
         != FC_OK)
     {
+        DEBUG_PRINT("Failed to read pressure whoami\n");
         return FC_ERROR;
     }
 
@@ -70,6 +71,7 @@ FC_Status pressureSensorInit(void)
 
     if (PressureSensor_RegWrite(PRESSURE_CTRL_REG2, _BIT(SWRESET)) != FC_OK)
     {
+        DEBUG_PRINT("Failed to write pressure reg2\n");
         return FC_ERROR;
     }
 
@@ -81,6 +83,7 @@ FC_Status pressureSensorInit(void)
     uint8_t tmp = _BIT(PD) | _BIT(ODR2) | _BIT(BDU);
     if (PressureSensor_RegWrite(PRESSURE_CTRL_REG1, tmp) != FC_OK)
     {
+        DEBUG_PRINT("Failed to write pressure reg1\n");
         return FC_ERROR;
     }
 
