@@ -35,9 +35,12 @@ void vBlinkTask( void *pvParameters )
     LED3_ON
     for( ;; )
     {
-        HAL_GPIO_TogglePin(LED_PORT, LED3_PIN);
-        /*HAL_GPIO_TogglePin(LED_PORT, LED4_PIN);*/
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        rgbSetColour(RGB_GREEN);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        rgbSetColour(RGB_BLUE);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        rgbSetColour(RGB_RED);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 
     /* Tasks must not attempt to return from their implementing

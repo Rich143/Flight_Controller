@@ -9,7 +9,7 @@
 #define I2Cx                            I2C1
 #define I2Cx_CLK_ENABLE()               __HAL_RCC_I2C1_CLK_ENABLE()
 #define I2Cx_SDA_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
-#define I2Cx_SCL_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE() 
+#define I2Cx_SCL_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOB_CLK_ENABLE()
 
 #define I2Cx_FORCE_RESET()              __HAL_RCC_I2C1_FORCE_RESET()
 #define I2Cx_RELEASE_RESET()            __HAL_RCC_I2C1_RELEASE_RESET()
@@ -81,8 +81,8 @@ void Clock_Config() {
 
 /**
   * @brief  System Clock Configuration
-  *         The system Clock is configured as follow : 
-  *            System Clock source            = PLL (HSE_CRYSTAL or HSE_BYPASS) 
+  *         The system Clock is configured as follow :
+  *            System Clock source            = PLL (HSE_CRYSTAL or HSE_BYPASS)
   *            SYSCLK(Hz)                     = 100000000
   *            HCLK(Hz)                       = 100000000
   *            AHB Prescaler                  = 1
@@ -190,9 +190,41 @@ void setup_outputs() {
     GPIO_InitStruct.Pin = LED3_PIN;
     HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = LED4_PIN;
-    HAL_GPIO_Init(LED_PORT, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = LED_G_PIN;
+    HAL_GPIO_Init(LED_G_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = LED_B_PIN;
+    HAL_GPIO_Init(LED_B_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = LED_R_PIN;
+    HAL_GPIO_Init(LED_R_PORT, &GPIO_InitStruct);
+
 #endif
+}
+
+void rgbSetColour(RGB_Colour colour)
+{
+    switch (colour)
+    {
+        case RGB_RED:
+            HAL_GPIO_WritePin(LED_R_PORT, LED_R_PIN, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(LED_G_PORT, LED_G_PIN, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(LED_B_PORT, LED_B_PIN, GPIO_PIN_SET);
+            break;
+        case RGB_GREEN:
+            HAL_GPIO_WritePin(LED_R_PORT, LED_R_PIN, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(LED_G_PORT, LED_G_PIN, GPIO_PIN_RESET);
+            HAL_GPIO_WritePin(LED_B_PORT, LED_B_PIN, GPIO_PIN_SET);
+            break;
+        case RGB_BLUE:
+            HAL_GPIO_WritePin(LED_R_PORT, LED_R_PIN, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(LED_G_PORT, LED_G_PIN, GPIO_PIN_SET);
+            HAL_GPIO_WritePin(LED_B_PORT, LED_B_PIN, GPIO_PIN_RESET);
+            break;
+        default:
+            DEBUG_PRINT("Unkown RGB Colour\n");
+            break;
+    }
 }
 
 void setup_I2C() {
