@@ -44,8 +44,20 @@ FC_Status AccelGyro_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
     HAL_StatusTypeDef rc;
 
+    if (xSemaphoreTake(I2CMutex, I2C_MUT_WAIT_TICKS) != pdTRUE)
+    {
+        DEBUG_PRINT("AccelGyro failed to take I2C mut\n");
+        return FC_ERROR;
+    }
+
     rc = HAL_I2C_Mem_Read(&I2cHandle, ACCEL_GYRO_ADDRESS_HAL, regAddress,
                           I2C_MEMADD_SIZE_8BIT, val, size, IMU_I2C_TIMEOUT);
+
+    if (xSemaphoreGive(I2CMutex) != pdTRUE)
+    {
+        DEBUG_PRINT("AccelGyro failed to give I2C mut\n");
+        return FC_ERROR;
+    }
 
     if (rc != HAL_OK)
     {
@@ -60,10 +72,22 @@ FC_Status AccelGyro_RegWrite(uint8_t regAddress, uint8_t val)
 {
     HAL_StatusTypeDef rc;
 
+    if (xSemaphoreTake(I2CMutex, I2C_MUT_WAIT_TICKS) != pdTRUE)
+    {
+        DEBUG_PRINT("AccelGyro failed to take I2C mut\n");
+        return FC_ERROR;
+    }
+
     rc = HAL_I2C_Mem_Write(&I2cHandle, ACCEL_GYRO_ADDRESS_HAL,
                           regAddress,
                           I2C_MEMADD_SIZE_8BIT, &val, 1 /* 1 byte read */,
                           IMU_I2C_TIMEOUT);
+
+    if (xSemaphoreGive(I2CMutex) != pdTRUE)
+    {
+        DEBUG_PRINT("AccelGyro failed to give I2C mut\n");
+        return FC_ERROR;
+    }
 
     if (rc != HAL_OK)
     {
@@ -189,6 +213,6 @@ void vIMUTask(void *pvParameters)
         }
         DEBUG_PRINT("Ax: %ld, Ay: %ld, Az: %ld\n", accel.x, accel.y, accel.z);
         DEBUG_PRINT("Gx: %ld, Gy: %ld, Gz: %ld\n", gyro.x, gyro.y, gyro.z);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }

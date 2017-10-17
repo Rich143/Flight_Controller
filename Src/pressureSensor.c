@@ -21,10 +21,22 @@ FC_Status PressureSensor_RegRead(uint8_t regAddress, uint8_t *val, int size)
         regAddress |= _BIT(7);
     }
 
+    if (xSemaphoreTake(I2CMutex, I2C_MUT_WAIT_TICKS) != pdTRUE)
+    {
+        DEBUG_PRINT("Pressure failed to take I2C mut\n");
+        return FC_ERROR;
+    }
+
     rc = HAL_I2C_Mem_Read(&I2cHandle, PRESSURE_SENSOR_ADDRESS_HAL,
                           regAddress,
                           I2C_MEMADD_SIZE_8BIT, val, size,
                           PRESSURE_SENSOR_I2C_TIMEOUT);
+
+    if (xSemaphoreGive(I2CMutex) != pdTRUE)
+    {
+        DEBUG_PRINT("Pressure failed to give I2C mut\n");
+        return FC_ERROR;
+    }
 
     if (rc != HAL_OK)
     {
@@ -38,10 +50,23 @@ FC_Status PressureSensor_RegRead(uint8_t regAddress, uint8_t *val, int size)
 FC_Status PressureSensor_RegWrite(uint8_t regAddress, uint8_t val)
 {
     HAL_StatusTypeDef rc;
+
+    if (xSemaphoreTake(I2CMutex, I2C_MUT_WAIT_TICKS) != pdTRUE)
+    {
+        DEBUG_PRINT("Pressure failed to take I2C mut\n");
+        return FC_ERROR;
+    }
+
     rc = HAL_I2C_Mem_Write(&I2cHandle, PRESSURE_SENSOR_ADDRESS_HAL,
                           regAddress,
                           I2C_MEMADD_SIZE_8BIT, &val, 1 /* 1 byte read */,
                           PRESSURE_SENSOR_I2C_TIMEOUT);
+
+    if (xSemaphoreGive(I2CMutex) != pdTRUE)
+    {
+        DEBUG_PRINT("Pressure failed to give I2C mut\n");
+        return FC_ERROR;
+    }
 
     if (rc != HAL_OK)
     {

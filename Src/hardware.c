@@ -14,7 +14,7 @@
 #define I2Cx_FORCE_RESET()              __HAL_RCC_I2C1_FORCE_RESET()
 #define I2Cx_RELEASE_RESET()            __HAL_RCC_I2C1_RELEASE_RESET()
 
-#define I2Cx_SPEED                      50000
+#define I2Cx_SPEED                      400000
 
 /* Definition for I2Cx Pins */
 #define I2Cx_SCL_PIN                    GPIO_PIN_6
@@ -25,6 +25,7 @@
 #define I2Cx_SDA_AF                     GPIO_AF4_I2C1
 
 I2C_HandleTypeDef I2cHandle;
+SemaphoreHandle_t I2CMutex;
 
 /** System Clock Configuration
  */
@@ -249,6 +250,14 @@ void setup_I2C() {
     {
         /* Initialization Error */
         Error_Handler("I2C init fail");
+    }
+
+    // Create I2C bus mutex
+    I2CMutex = xSemaphoreCreateMutex();
+
+    if( I2CMutex == NULL )
+    {
+        Error_Handler("Failed to create I2C mutex");
     }
 }
 
