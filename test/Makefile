@@ -53,10 +53,10 @@ CXXFLAGS += -g -Wall -Wextra -pthread
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TEST_SRC = fake_logic_unittest.c pid_unittest.c rate_control_unittest.c pressure_sensor_unittest.c attitude_unittest.c
+TEST_SRC = fake_logic_unittest.cpp pid_unittest.cpp rate_control_unittest.cpp pressure_sensor_unittest.cpp attitude_unittest.cpp imu_unittest.cpp
 
 # All src files tested
-TESTED_SRC_FILES = fake_logic.c pid.c rate_control.c pressureSensor.c fc.c calculateAttitude.c
+TESTED_SRC_FILES = fake_logic.c pid.c rate_control.c pressureSensor.c fc.c calculateAttitude.c imu.c
 TESTED_SRC_FILES := $(addprefix $(SRC_DIR)/, $(TESTED_SRC_FILES))
 
 TESTED_OBJS := $(addprefix $(BIN_DIR)/$(TESTED_OBJS_DIR)/, $(addsuffix .o,$(notdir $(basename $(TESTED_SRC_FILES)))))
