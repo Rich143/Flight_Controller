@@ -1,12 +1,17 @@
 #include "fc.h"
 
+#include "imu.h"
+#include "ImuRegisters.h"
+
+#ifndef __UNIT_TEST
+
 #include "freertos.h"
 #include "task.h"
 
-#include "imu.h"
-#include "ImuRegisters.h"
 #include "debug.h"
 #include "hardware.h"
+
+#endif
 
 // Sensor Sensitivity Constants
 // Values set according to the typical specifications provided in
@@ -39,6 +44,8 @@
 // Change this to change scale and associated sensitivity
 #define GYRO_SCALE GYRO_SCALE_2000DPS
 #define GYRO_SENSITIVITY SENSITIVITY_GYROSCOPE_2000
+
+#ifndef __UNIT_TEST
 
 FC_Status AccelGyro_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
@@ -97,6 +104,12 @@ FC_Status AccelGyro_RegWrite(uint8_t regAddress, uint8_t val)
 
     return FC_OK;
 }
+
+#else
+// Declare these as extern to allow for mocking in unit tests
+FC_Status AccelGyro_RegRead(uint8_t regAddress, uint8_t *val, int size);
+FC_Status AccelGyro_RegWrite(uint8_t regAddress, uint8_t val);
+#endif
 
 FC_Status IMU_Init(void)
 {
@@ -191,6 +204,7 @@ FC_Status getGyro(Gyro_t *gyroData)
     return FC_OK;
 }
 
+#ifndef __UNIT_TEST
 void vIMUTask(void *pvParameters)
 {
     DEBUG_PRINT("Starting IMU Task\n");
@@ -216,3 +230,4 @@ void vIMUTask(void *pvParameters)
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }
+#endif

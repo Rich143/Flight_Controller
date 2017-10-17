@@ -27,5 +27,7 @@ typedef struct GyroRaw_t {
     int16_t z;
 } GyroRaw_t;
 
+FC_Status getAccel(Accel_t *accelData);
+FC_Status getGyro(Gyro_t *gyroData);
 void vIMUTask(void *pvParameters);
 #endif /*defined(__IMU_H)*/
