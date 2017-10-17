@@ -17,11 +17,28 @@
 #define SENSITIVITY_ACCELEROMETER_16 0.732f
 #define SENSITIVITY_GYROSCOPE_245    8.75f
 #define SENSITIVITY_GYROSCOPE_500    1.75f
-#define SENSITIVITY_GYROSCOPE_2000   70f
+#define SENSITIVITY_GYROSCOPE_2000   70.0f
 #define SENSITIVITY_MAGNETOMETER_4   0.14f
 #define SENSITIVITY_MAGNETOMETER_8   0.29f
 #define SENSITIVITY_MAGNETOMETER_12  0.43f
 #define SENSITIVITY_MAGNETOMETER_16  0.58f
+
+#define ACCELEROMETER_SCALE_2G 00
+#define ACCELEROMETER_SCALE_16G 01
+#define ACCELEROMETER_SCALE_4G 10
+#define ACCELEROMETER_SCALE_8G 11
+
+#define GYRO_SCALE_245DPS 00
+#define GYRO_SCALE_500DPS 01
+#define GYRO_SCALE_2000DPS 11
+
+// Change this to change scale and associated sensitivity
+#define ACCEL_SCALE ACCELEROMETER_SCALE_2G
+#define ACCEL_SENSITIVITY SENSITIVITY_ACCELEROMETER_2
+//
+// Change this to change scale and associated sensitivity
+#define GYRO_SCALE GYRO_SCALE_2000DPS
+#define GYRO_SENSITIVITY SENSITIVITY_GYROSCOPE_2000
 
 FC_Status AccelGyro_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
@@ -79,7 +96,7 @@ FC_Status IMU_Init(void)
     // CTRL_REG3_G set to 0 (no low power or hpf)
     uint8_t tempreg = 0;
     tempreg |= 0x6 << 5; // set ODR 952 Hz
-    tempreg |= 0x3 << 3; // set full scale 2000 dps
+    tempreg |= GYRO_SCALE << 3; // set full scale 2000 dps
     if (AccelGyro_RegWrite(CTRL_REG1_G, tempreg) != FC_OK)
     {
         DEBUG_PRINT("Failed to write to gyro\n");
@@ -90,8 +107,8 @@ FC_Status IMU_Init(void)
     // CTRL_REG6_XL set no high resolution mode
     tempreg = 0;
     tempreg |= 0x6 << 5; // set ODR 952
-                         // 0 sets scale 2g
-    if (AccelGyro_RegWrite(CTRL_REG1_G, tempreg) != FC_OK)
+    tempreg |= ACCEL_SCALE << 3; // set the scale
+    if (AccelGyro_RegWrite(CTRL_REG6_XL, tempreg) != FC_OK)
     {
         DEBUG_PRINT("Failed to write to accel\n");
         return FC_ERROR;
@@ -100,7 +117,7 @@ FC_Status IMU_Init(void)
     return FC_OK;
 }
 
-FC_Status getAccel(AccelRaw_t *accelData)
+FC_Status getAccel(Accel_t *accelData)
 {
 	uint8_t temp[6]; // read six bytes from the accelerometer into temp
     AccelRaw_t raw;
@@ -114,9 +131,9 @@ FC_Status getAccel(AccelRaw_t *accelData)
     raw.y = (temp[3] << 8) | temp[2]; // Store y-axis values
     raw.z = (temp[5] << 8) | temp[4]; // Store z-axis values
 
-    float x = ((float)(raw.x)) * SENSITIVITY_ACCELEROMETER_2;
-    float y = ((float)(raw.y)) * SENSITIVITY_ACCELEROMETER_2;
-    float z = ((float)(raw.z)) * SENSITIVITY_ACCELEROMETER_2;
+    float x = ((float)(raw.x)) * ACCEL_SENSITIVITY;
+    float y = ((float)(raw.y)) * ACCEL_SENSITIVITY;
+    float z = ((float)(raw.z)) * ACCEL_SENSITIVITY;
 
     accelData->x = x;
     accelData->y = y;
@@ -125,6 +142,30 @@ FC_Status getAccel(AccelRaw_t *accelData)
     return FC_OK;
 }
 
+FC_Status getGyro(Gyro_t *gyroData)
+{
+	uint8_t temp[6]; // read six bytes from the accelerometer into temp
+    GyroRaw_t raw;
+	if (AccelGyro_RegRead(OUT_X_L_G, temp, 6) != FC_OK) // Read 6 bytes, beginning at OUT_X_L_G
+	{
+        DEBUG_PRINT("Failed to read from Gyro\n");
+        return FC_ERROR;
+    }
+
+    raw.x = (temp[1] << 8) | temp[0]; // Store x-axis values
+    raw.y = (temp[3] << 8) | temp[2]; // Store y-axis values
+    raw.z = (temp[5] << 8) | temp[4]; // Store z-axis values
+
+    float x = ((float)(raw.x)) * GYRO_SENSITIVITY;
+    float y = ((float)(raw.y)) * GYRO_SENSITIVITY;
+    float z = ((float)(raw.z)) * GYRO_SENSITIVITY;
+
+    gyroData->x = x;
+    gyroData->y = y;
+    gyroData->z = z;
+
+    return FC_OK;
+}
 
 void vIMUTask(void *pvParameters)
 {
@@ -136,13 +177,18 @@ void vIMUTask(void *pvParameters)
     }
     DEBUG_PRINT("Initialized IMU\n");
 
-    AccelRaw_t accel = {0};
+    Accel_t accel = {0};
+    Gyro_t gyro = {0};
     for ( ;; )
     {
         if (getAccel(&accel) != FC_OK) {
             // Do something
         }
-        DEBUG_PRINT("Ax: %d, Ay: %d, Az: %d\n", accel.x, accel.y, accel.z);
+        if (getGyro(&gyro) != FC_OK) {
+            // Do something
+        }
+        DEBUG_PRINT("Ax: %ld, Ay: %ld, Az: %ld\n", accel.x, accel.y, accel.z);
+        DEBUG_PRINT("Gx: %ld, Gy: %ld, Gz: %ld\n", gyro.x, gyro.y, gyro.z);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }

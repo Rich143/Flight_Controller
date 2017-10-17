@@ -14,5 +14,18 @@ typedef struct AccelRaw_t {
     int16_t y;
     int16_t z;
 } AccelRaw_t;
+
+typedef struct Gyro_t {
+    int32_t x;
+    int32_t y;
+    int32_t z;
+} Gyro_t;
+
+typedef struct GyroRaw_t {
+    int16_t x;
+    int16_t y;
+    int16_t z;
+} GyroRaw_t;
+
 void vIMUTask(void *pvParameters);
 #endif /*defined(__IMU_H)*/
