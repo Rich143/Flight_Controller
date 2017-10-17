@@ -54,7 +54,7 @@ void vBlinkTask( void *pvParameters )
 
 int32_t setup(void){
     // System Clock config
-    Clock_Config();
+    ClockHSE_Config();
 
     // Reset of all peripherals, Initializes teh Flash interface and the Systick
     HAL_Init();
@@ -70,10 +70,7 @@ int32_t setup(void){
 int main(void)
 {
     setup();
-
-    printf("Started up. Switching to HSE_Clock\n");
-    ClockHSE_Config();
-    printf("Switched to HSE Clock\n");
+    printf("System start up. Hardware initialized.\n");
 
     xTaskCreate(vBlinkTask, "blinkTask", 100, NULL, 3 /* priority */, NULL);
     /*xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 [> priority <], NULL);*/

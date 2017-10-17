@@ -14,7 +14,7 @@
 #define I2Cx_FORCE_RESET()              __HAL_RCC_I2C1_FORCE_RESET()
 #define I2Cx_RELEASE_RESET()            __HAL_RCC_I2C1_RELEASE_RESET()
 
-#define I2Cx_SPEED                      400000
+#define I2Cx_SPEED                      200000
 
 /* Definition for I2Cx Pins */
 #define I2Cx_SCL_PIN                    GPIO_PIN_6
@@ -161,6 +161,15 @@ void ClockHSE_Config(void)
     /* Initialization Error */
     Error_Handler("Osc config fail");
   }
+
+  /* Enable appropriate peripheral clocks */
+  __SYSCFG_CLK_ENABLE();
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
 }
 
 void setup_inputs() {
