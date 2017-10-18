@@ -8,7 +8,7 @@
 #include "task.h"
 
 #include "pressureSensor.h"
-#include "hardware.h"
+#include "i2c.h"
 #include "debug.h"
 
 FC_Status PressureSensor_RegRead(uint8_t regAddress, uint8_t *val, int size)

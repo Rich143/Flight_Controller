@@ -76,7 +76,7 @@ int main(void)
     /*xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 [> priority <], NULL);*/
     /*xTaskCreate(vPrintTask2, "printTask2", 300, NULL, 2 [> priority <], NULL);*/
     xTaskCreate(vDebugTask, "debugTask", 300, NULL, 1 /* priority */, NULL);
-    xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 /* priority */, NULL);
+    /*xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 [> priority <], NULL);*/
     xTaskCreate(vIMUTask, "IMUTask", 300, NULL, 4 /* priority */, NULL);
 
     vTaskStartScheduler();

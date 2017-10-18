@@ -9,7 +9,7 @@
 #include "task.h"
 
 #include "debug.h"
-#include "hardware.h"
+#include "i2c.h"
 
 #endif
 
@@ -57,22 +57,38 @@ FC_Status AccelGyro_RegRead(uint8_t regAddress, uint8_t *val, int size)
         return FC_ERROR;
     }
 
-    rc = HAL_I2C_Mem_Read(&I2cHandle, ACCEL_GYRO_ADDRESS_HAL, regAddress,
-                          I2C_MEMADD_SIZE_8BIT, val, size, IMU_I2C_TIMEOUT);
+    // Only use DMA if transfer is large enough to make it worthwile
+    if (size > 1) {
+        rc = HAL_I2C_Mem_Read_DMA(&I2cHandle, ACCEL_GYRO_ADDRESS_HAL, regAddress,
+                          I2C_MEMADD_SIZE_8BIT, val, size);
+
+        if (rc == HAL_OK)
+        {
+            // Wait for dma read to finish
+            // I2C_DMA_CompleteSem is posted to by the rx complete callback
+            if( xSemaphoreTake( I2C_DMA_CompleteSem, I2C_DMA_SEM_WAIT_TICKS ) != pdTRUE )
+            {
+                DEBUG_PRINT("I2C DMA timeout\n");
+                rc = HAL_ERROR;
+            }
+        }
+    } else {
+        rc = HAL_I2C_Mem_Read(&I2cHandle, ACCEL_GYRO_ADDRESS_HAL, regAddress,
+                              I2C_MEMADD_SIZE_8BIT, val, size, IMU_I2C_TIMEOUT);
+    }
 
     if (xSemaphoreGive(I2CMutex) != pdTRUE)
     {
         DEBUG_PRINT("AccelGyro failed to give I2C mut\n");
-        return FC_ERROR;
+        rc = HAL_ERROR;
     }
 
     if (rc != HAL_OK)
     {
         DEBUG_PRINT("AccelGyro Reg read fail %d\n", rc);
-        return FC_ERROR;
     }
 
-    return FC_OK;
+    return rc;
 }
 
 FC_Status AccelGyro_RegWrite(uint8_t regAddress, uint8_t val)
@@ -222,9 +238,11 @@ void vIMUTask(void *pvParameters)
         if (getAccel(&accel) != FC_OK) {
             // Do something
         }
-        if (getGyro(&gyro) != FC_OK) {
-            // Do something
-        }
+        /*
+         *if (getGyro(&gyro) != FC_OK) {
+         *    // Do something
+         *}
+         */
         DEBUG_PRINT("Ax: %ld, Ay: %ld, Az: %ld\n", accel.x, accel.y, accel.z);
         DEBUG_PRINT("Gx: %ld, Gy: %ld, Gz: %ld\n", gyro.x, gyro.y, gyro.z);
         vTaskDelay(500 / portTICK_PERIOD_MS);

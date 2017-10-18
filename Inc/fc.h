@@ -26,8 +26,10 @@ void assertFailed(char *file, int line);
 #endif
 
 typedef enum {
-    FC_OK,
-    FC_ERROR
+    FC_OK = HAL_OK,
+    FC_ERROR = HAL_ERROR,
+    FC_BUSY = HAL_BUSY,
+    FC_TIMEOUT = HAL_TIMEOUT,
 } FC_Status;
 
 void Error_Handler();
