@@ -23,6 +23,10 @@ void assertFailed(char *file, int line);
 
 #include <stdio.h>
 #define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#define HAL_OK 0
+#define HAL_ERROR 1
+#define HAL_BUSY 2
+#define HAL_TIMEOUT 3
 #endif
 
 typedef enum {
