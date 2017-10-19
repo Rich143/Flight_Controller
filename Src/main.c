@@ -64,6 +64,8 @@ int32_t setup(void){
 
     hardware_init();
 
+    HAL_NVIC_SetPriorityGrouping( NVIC_PRIORITYGROUP_4 ); // see http://www.freertos.org/RTOS-Cortex-M3-M4.html
+
     return 0;
 }
 

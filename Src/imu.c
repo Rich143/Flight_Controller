@@ -238,11 +238,9 @@ void vIMUTask(void *pvParameters)
         if (getAccel(&accel) != FC_OK) {
             // Do something
         }
-        /*
-         *if (getGyro(&gyro) != FC_OK) {
-         *    // Do something
-         *}
-         */
+        if (getGyro(&gyro) != FC_OK) {
+            // Do something
+        }
         DEBUG_PRINT("Ax: %ld, Ay: %ld, Az: %ld\n", accel.x, accel.y, accel.z);
         DEBUG_PRINT("Gx: %ld, Gy: %ld, Gz: %ld\n", gyro.x, gyro.y, gyro.z);
         vTaskDelay(500 / portTICK_PERIOD_MS);

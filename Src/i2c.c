@@ -71,7 +71,7 @@ void setup_I2C() {
     }
 }
 
-void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
     BaseType_t xHigherPriorityTaskWoken;
 
@@ -183,11 +183,11 @@ void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
 
     /*##-6- Configure the NVIC for DMA #########################################*/
     /* NVIC configuration for DMA transfer complete interrupt (I2C1_TX) */
-    HAL_NVIC_SetPriority(I2Cx_DMA_TX_IRQn, 1, 0);
+    HAL_NVIC_SetPriority(I2Cx_DMA_TX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0); // Priority must be set to greater than or equal to configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, so just set it equal to it
     HAL_NVIC_EnableIRQ(I2Cx_DMA_TX_IRQn);
 
     /* NVIC configuration for DMA transfer complete interrupt (I2C1_RX) */
-    HAL_NVIC_SetPriority(I2Cx_DMA_RX_IRQn, 0, 0);
+    HAL_NVIC_SetPriority(I2Cx_DMA_RX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(I2Cx_DMA_RX_IRQn);
 
     /*##-7- Configure the NVIC for I2C #########################################*/
