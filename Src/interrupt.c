@@ -3,6 +3,7 @@
 #include "sched.h"
 #include "cmsis_os.h"
 #include "i2c.h"
+#include "ppm.h"
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -131,4 +132,13 @@ void SysTick_Handler(void)
 {
   HAL_IncTick();
   osSystickHandler();
+}
+
+/**
+* @brief This function handles TIM5 global interrupt.
+*/
+void TIM5_IRQHandler(void)
+{
+    LED2_ON
+    HAL_TIM_IRQHandler(&htim5);
 }
