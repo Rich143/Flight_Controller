@@ -73,7 +73,7 @@ void setup_I2C() {
 
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
 {
-    BaseType_t xHigherPriorityTaskWoken;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
     xSemaphoreGiveFromISR(I2C_DMA_CompleteSem, &xHigherPriorityTaskWoken);
 

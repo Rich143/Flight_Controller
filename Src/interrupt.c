@@ -139,6 +139,5 @@ void SysTick_Handler(void)
 */
 void TIM5_IRQHandler(void)
 {
-    LED2_ON
     HAL_TIM_IRQHandler(&htim5);
 }

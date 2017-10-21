@@ -14,11 +14,11 @@ extern QueueHandle_t printQueue;
 
 //#define printf DONT USE PRINTF, USE DEBUG_PRINT
 
-/** 
+/**
  * @brief Send a debug string to the uart
- * 
+ *
  * @param ... the format string and any arguments
- * 
+ *
  * This creates a string from the format and arguments, then copies it to a
  * queue for future printing over the uart by the debug task
  * This will trim any resultant string to PRINT_QUEUE_STRING_SIZE characters
@@ -32,6 +32,26 @@ extern QueueHandle_t printQueue;
         char buf[PRINT_QUEUE_STRING_SIZE] = {0}; \
         snprintf(buf, PRINT_QUEUE_STRING_SIZE, __VA_ARGS__); \
         xQueueSend(printQueue, buf, QUEUE_SEND_TIMEOUT_TICKS); \
+    } while(0)
+
+/**
+ * @brief Send a debug string to the uart
+ *
+ * @param ... the format string and any arguments
+ *
+ * This creates a string from the format and arguments, then copies it to a
+ * queue for future printing over the uart by the debug task
+ * This will trim any resultant string to PRINT_QUEUE_STRING_SIZE characters
+ * It will silently fail if the queue is full after waiting for
+ * QUEUE_SEND_TIMEOUT_TICKS
+ *
+ * @return Nothing
+ */
+#define DEBUG_PRINT_ISR(...) \
+    do { \
+        char buf[PRINT_QUEUE_STRING_SIZE] = {0}; \
+        snprintf(buf, PRINT_QUEUE_STRING_SIZE, __VA_ARGS__); \
+        xQueueSendFromISR(printQueue, buf, NULL); \
     } while(0)
 
 void vDebugTask(void *pvParameters);

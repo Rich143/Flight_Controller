@@ -13,6 +13,7 @@
 #include "debug.h"
 #include "imu.h"
 #include "pressureSensor.h"
+#include "ppm.h"
 
 void vPrintTask1( void *pvParameters )
 {
@@ -52,7 +53,7 @@ void vBlinkTask( void *pvParameters )
     vTaskDelete( NULL );
 }
 
-int32_t setup(void){
+void setup(void){
     // System Clock config
     ClockHSE_Config();
 
@@ -66,7 +67,9 @@ int32_t setup(void){
 
     HAL_NVIC_SetPriorityGrouping( NVIC_PRIORITYGROUP_4 ); // see http://www.freertos.org/RTOS-Cortex-M3-M4.html
 
-    return 0;
+    printf("Free heap size after setup: %d\n", xPortGetFreeHeapSize());
+
+    return;
 }
 
 int main(void)
@@ -74,12 +77,13 @@ int main(void)
     setup();
     printf("System start up. Hardware initialized.\n");
 
-    xTaskCreate(vBlinkTask, "blinkTask", 100, NULL, 3 /* priority */, NULL);
+    xTaskCreate(vBlinkTask, "blinkTask", 50, NULL, 3 /* priority */, NULL);
     /*xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 [> priority <], NULL);*/
     /*xTaskCreate(vPrintTask2, "printTask2", 300, NULL, 2 [> priority <], NULL);*/
     xTaskCreate(vDebugTask, "debugTask", 300, NULL, 1 /* priority */, NULL);
     /*xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 [> priority <], NULL);*/
-    xTaskCreate(vIMUTask, "IMUTask", 300, NULL, 4 /* priority */, NULL);
+    /*xTaskCreate(vIMUTask, "IMUTask", 300, NULL, 4 [> priority <], NULL);*/
+    xTaskCreate(vRCTask, "RCTask", 200, NULL, 4 /* priority */, NULL);
 
     vTaskStartScheduler();
 

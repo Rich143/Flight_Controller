@@ -72,6 +72,7 @@ SRC := $(wildcard $(SRC_DIR)/*.c) \
 SRC := $(filter-out $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Src/stm32f4xx_hal_msp_template.c,$(SRC))
 SRC := $(filter-out $(DRIVER_DIR)/Src/stm32f4xx_hal_timebase_rtc_alarm_template.c,$(SRC)) # This seems to be some template file that needs to be modified to be used
 SRC := $(filter-out $(DRIVER_DIR)/Src/stm32f4xx_hal_timebase_rtc_wakeup_template.c,$(SRC)) # This seems to be some template file that needs to be modified to be used
+SRC := $(filter-out $(DRIVER_DIR)/Src/stm32f4xx_hal_timebase_tim_template.c,$(SRC)) # This seems to be some template file that needs to be modified to be used
 
 SRCASM := $(DRIVER_DIR)/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/startup_stm32f410rx.s
 

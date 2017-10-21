@@ -6,6 +6,7 @@
 #include "pins.h"
 #include "debug.h"
 #include "i2c.h"
+#include "ppm.h"
 
 /** System Clock Configuration
  */
@@ -228,4 +229,5 @@ void hardware_init() {
     setup_outputs();
     setup_I2C();
     debug_init();
+    ppmInit();
 }
