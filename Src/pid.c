@@ -17,16 +17,6 @@ int satLimit(int val, int min, int max, int *saturated)
     }
 }
 
-int limit(int val, int min, int max)
-{
-    if (val < min) {
-        return min;
-    } else if (val > max) {
-        return max;
-    } else {
-        return val;
-    }
-}
 
 int controlLoop(int error, ControlInfo_t *info, PID_Gains_t *gain,
                 Limits_t* limits)

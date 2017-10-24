@@ -41,6 +41,7 @@ void vControlLoopTask(void *pvParameters)
 
     bool newPpmAvailable = false;
     bool armed = false;
+    uint32_t rcThrottle = 1000;
 
     DEBUG_PRINT("Starting control loop\n");
     for ( ;; )
@@ -61,10 +62,14 @@ void vControlLoopTask(void *pvParameters)
 
         if (armed) {
             if (newPpmAvailable) {
-                setMotor(MOTOR_FRONT_LEFT, ppmSignal.signals[THROTTLE_CHANNEL]);
-                setMotor(MOTOR_FRONT_RIGHT, ppmSignal.signals[THROTTLE_CHANNEL]);
-                setMotor(MOTOR_BACK_LEFT, ppmSignal.signals[THROTTLE_CHANNEL]);
-                setMotor(MOTOR_BACK_RIGHT, ppmSignal.signals[THROTTLE_CHANNEL]);
+                rcThrottle = ppmSignal.signals[THROTTLE_CHANNEL];
+
+                rcThrottle = limit(rcThrottle, MOTOR_LOW_VAL_US, MOTOR_HIGH_VAL_US);
+
+                setMotor(MOTOR_FRONT_LEFT, rcThrottle);
+                setMotor(MOTOR_FRONT_RIGHT, rcThrottle);
+                setMotor(MOTOR_BACK_LEFT, rcThrottle);
+                setMotor(MOTOR_BACK_RIGHT, rcThrottle);
             }
         } else {
             motorsStop();

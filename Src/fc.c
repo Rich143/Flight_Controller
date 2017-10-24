@@ -1,9 +1,22 @@
-#ifndef __UNIT_TEST
 #include "fc.h"
+#ifndef __UNIT_TEST
 #include "pins.h"
 #include "debug.h"
 #include "task.h"
+#endif
 
+int limit(int val, int min, int max)
+{
+    if (val < min) {
+        return min;
+    } else if (val > max) {
+        return max;
+    } else {
+        return val;
+    }
+}
+
+#ifndef __UNIT_TEST
 void Error_Handler(char *msg)
 {
     // Disable interrupts. This ensures we don't get interrupted while

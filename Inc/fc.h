@@ -37,6 +37,7 @@ typedef enum {
 } FC_Status;
 
 void Error_Handler();
+int limit(int val, int min, int max);
 
 #endif
 
