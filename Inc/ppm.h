@@ -4,8 +4,7 @@
 #include "fc.h"
 #include "freertos.h"
 #include "queue.h"
-
-#define RC_CHANNEL_IN_COUNT    8
+#include "rc.h"
 
 typedef struct tPpmSignal {
     uint16_t signals[RC_CHANNEL_IN_COUNT];

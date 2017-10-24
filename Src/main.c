@@ -15,6 +15,7 @@
 #include "pressureSensor.h"
 #include "ppm.h"
 #include "motors.h"
+#include "controlLoop.h"
 
 void vPrintTask1( void *pvParameters )
 {
@@ -85,7 +86,7 @@ int main(void)
     /*xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 [> priority <], NULL);*/
     /*xTaskCreate(vIMUTask, "IMUTask", 300, NULL, 4 [> priority <], NULL);*/
     /*xTaskCreate(vRCTask, "RCTask", 200, NULL, 4 [> priority <], NULL);*/
-    xTaskCreate(vMotorsTask, "MotorsTask", 200, NULL, 4 /* priority */, NULL);
+    xTaskCreate(vControlLoopTask, "ControlLoopTask", 400, NULL, 4 /* priority */, NULL);
 
     vTaskStartScheduler();
 

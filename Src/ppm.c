@@ -6,6 +6,7 @@
 #include "ppm.h"
 #include "pins.h"
 #include "debug.h"
+#include "rc.h"
 
 #define PPM_IN_PIN GPIO_PIN_0
 #define PPM_IN_PORT GPIOA

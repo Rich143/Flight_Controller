@@ -5,6 +5,7 @@
 
 #include "motors.h"
 #include "debug.h"
+#include "rc.h"
 
 #define MOTOR_1_PIN GPIO_PIN_11
 #define MOTOR_2_PIN GPIO_PIN_10
@@ -15,8 +16,6 @@
 #define MOTOR_OUTPUT_FREQUENCY 400
 #define MOTOR_OUTPUT_PERIOD (1000000/MOTOR_OUTPUT_FREQUENCY)
 
-#define MOTOR_LOW_VAL_US   1000
-#define MOTOR_HIGH_VAL_US  2000
 
 TIM_HandleTypeDef htim1;
 
@@ -155,16 +154,10 @@ FC_Status motorsStart()
       rc = FC_ERROR;
   }
 
-  if (rc == FC_ERROR)
-  {
-      // If one motor failed to start, stop them all
-      motorsStop();
-  }
-
   return rc;
 }
 
-FC_Status motorDeinit()
+FC_Status motorsDeinit()
 {
     if (HAL_TIM_PWM_Stop(&htim1, MOTOR_FRONT_LEFT) != HAL_OK)
     {

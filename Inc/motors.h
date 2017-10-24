@@ -12,6 +12,8 @@ typedef enum MotorNum
 FC_Status motorsStart();
 FC_Status motorsStop();
 FC_Status motorsDeinit();
+FC_Status setMotor(MotorNum motor, uint32_t val);
+void motorsInit(void);
 
 void vMotorsTask(void *pvParameters);
 #endif /* defined(__MOTORS_H) */
