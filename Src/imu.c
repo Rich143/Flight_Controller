@@ -3,6 +3,7 @@
 #include "imu.h"
 #include "ImuRegisters.h"
 #include "rate_control.h"
+#include "controlLoop.h"
 
 #ifndef __UNIT_TEST
 

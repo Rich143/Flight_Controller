@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "motors.h"
 #include "rate_control.h"
+#include "controlLoop.h"
 #include "imu.h"
 
 FC_Status controlLoopInit()
@@ -36,35 +37,35 @@ FC_Status processPpmSignal(tPpmSignal *ppmSignal, Rates_t *desiredRatesOut,
     // only disarm if throttle is low, so don't accidentally disarm in
     // flight
     if (ppmSignal->signals[ARMED_SWITCH_CHANNEL] >= SWITCH_HIGH_THRESHOLD) {
-        (*armed) = true;
+        (*armedOut) = true;
     } else if (ppmSignal->signals[ARMED_SWITCH_CHANNEL] <= SWITCH_LOW_THRESHOLD
                && rcThrottle <= THROTTLE_LOW_THRESHOLD ) {
-        (*armed) = false;
+        (*armedOut) = false;
     }
 
 
     /*DEBUG_PRINT("rin: %d, pin: %d, yin: %d\n", ppmSignal->signals[ROLL_CHANNEL],*/
     /*ppmSignal->signals[PITCH_CHANNEL],ppmSignal->signals[YAW_CHANNEL]);*/
-    desiredRates->roll = limit(map(ppmSignal->signals[ROLL_CHANNEL],
+    desiredRatesOut->roll = limit(map(ppmSignal->signals[ROLL_CHANNEL],
                                   MIN_RC_VAL, MAX_RC_VAL,
                                   ROTATION_AXIS_OUTPUT_MIN,
                                   ROTATION_AXIS_OUTPUT_MAX),
                               ROTATION_AXIS_OUTPUT_MIN,
                               ROTATION_AXIS_OUTPUT_MAX);
-    desiredRates->pitch= limit(map(ppmSignal->signals[PITCH_CHANNEL],
+    desiredRatesOut->pitch= limit(map(ppmSignal->signals[PITCH_CHANNEL],
                                   MIN_RC_VAL, MAX_RC_VAL,
                                   ROTATION_AXIS_OUTPUT_MIN,
                                   ROTATION_AXIS_OUTPUT_MAX),
                               ROTATION_AXIS_OUTPUT_MIN,
                               ROTATION_AXIS_OUTPUT_MAX);
-    desiredRates->yaw= limit(map(ppmSignal->signals[YAW_CHANNEL],
+    desiredRatesOut->yaw= limit(map(ppmSignal->signals[YAW_CHANNEL],
                                 MIN_RC_VAL, MAX_RC_VAL,
                                 ROTATION_AXIS_OUTPUT_MIN,
                                 ROTATION_AXIS_OUTPUT_MAX),
                             ROTATION_AXIS_OUTPUT_MIN,
                             ROTATION_AXIS_OUTPUT_MAX);
-    /*DEBUG_PRINT("rd: %d, pd: %d, yd: %d\n", desiredRates->roll,*/
-    /*desiredRates->pitch, desiredRates->yaw);*/
+    /*DEBUG_PRINT("rd: %d, pd: %d, yd: %d\n", desiredRatesOut->roll,*/
+    /*desiredRatesOut->pitch, desiredRatesOut->yaw);*/
 
     return FC_OK;
 }
@@ -99,17 +100,17 @@ FC_Status checkControlLoopStatus(TickType_t lastPpmRxTime,
 
     if (curTick - lastPpmRxTime > PPM_RX_TIMEOUT_MS)
     {
-        DEBUG_PRINT("PPM timeout cur %d last %d\n", curTick, lastPpmRxTime);
+        DEBUG_PRINT("PPM timeout cur %lu last %lu\n", curTick, lastPpmRxTime);
         systemStatus = FC_ERROR;
     }
     if (curTick - lastGyroRxTime > GYRO_RX_TIMEOUT_MS)
     {
-        DEBUG_PRINT("Gyro timeout cur %d last %d\n", curTick, lastGyroRxTime);
+        DEBUG_PRINT("Gyro timeout cur %lu last %lu\n", curTick, lastGyroRxTime);
         systemStatus = FC_ERROR;
     }
     if (curTick - lastLoopTime > CONTROL_LOOP_TIMEOUT_MS)
     {
-        DEBUG_PRINT("CtrlLp timeout cur %d last %d\n", curTick, lastLoopTime);
+        DEBUG_PRINT("CtrlLp timeout cur %lu last %lu\n", curTick, lastLoopTime);
         systemStatus = FC_ERROR;
     }
 
@@ -172,7 +173,7 @@ void vControlLoopTask(void *pvParameters)
             lastPpmRxTime = xTaskGetTickCount();
 
             if (processPpmSignal(&ppmSignal, &desiredRates,
-                                 &rcThrottleOut, &armed) != FC_OK)
+                                 &rcThrottle, &armed) != FC_OK)
             {
                 DEBUG_PRINT("Failed to process ppm signal\n");
             }
@@ -201,7 +202,7 @@ void vControlLoopTask(void *pvParameters)
         }
 
         checkControlLoopStatus(lastPpmRxTime, lastGyroRxTime, lastLoopTime);
-        lastLooptime = xTaskGetTickCount();
+        lastLoopTime = xTaskGetTickCount();
 
         vTaskDelayUntil(&lastWakeTime, CONTROL_LOOP_PERIOD_TICKS);
     }
