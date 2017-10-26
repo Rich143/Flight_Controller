@@ -90,6 +90,43 @@ void updateMotors(uint32_t rcThrottle, RotationAxisOutputs_t *outputs)
              - outputs->yaw);
 }
 
+FC_Status checkControlLoopStatus(TickType_t lastPpmRxTime,
+                                 TickType_t lastGyroRxTime,
+                                 TickType_t lastLoopTime)
+{
+    FC_Status systemStatus = FC_OK;
+    TickType_t curTick = xTaskGetTickCount();
+
+    if (curTick - lastPpmRxTime > PPM_RX_TIMEOUT_MS)
+    {
+        DEBUG_PRINT("PPM timeout cur %d last %d\n", curTick, lastPpmRxTime);
+        systemStatus = FC_ERROR;
+    }
+    if (curTick - lastGyroRxTime > GYRO_RX_TIMEOUT_MS)
+    {
+        DEBUG_PRINT("Gyro timeout cur %d last %d\n", curTick, lastGyroRxTime);
+        systemStatus = FC_ERROR;
+    }
+    if (curTick - lastLoopTime > CONTROL_LOOP_TIMEOUT_MS)
+    {
+        DEBUG_PRINT("CtrlLp timeout cur %d last %d\n", curTick, lastLoopTime);
+        systemStatus = FC_ERROR;
+    }
+
+    if (systemStatus != FC_OK)
+    {
+        // System failure, stop the motors and reset
+        motorsStop();
+        NVIC_SystemReset();
+    }
+    else
+    {
+        // TODO: add wdt and kick it here
+    }
+
+    return systemStatus;
+}
+
 void vControlLoopTask(void *pvParameters)
 {
     tPpmSignal ppmSignal = {0};
@@ -120,9 +157,20 @@ void vControlLoopTask(void *pvParameters)
 
 
     DEBUG_PRINT("Starting control loop\n");
+
+    TickType_t lastPpmRxTime  = xTaskGetTickCount();
+    TickType_t lastLoopTime   = xTaskGetTickCount();
+    TickType_t lastGyroRxTime = xTaskGetTickCount();
+    // This is seperate from lastLoopTime because vTaskDelayUntil sets this
+    // to the last wake time + increment, even if there is some unforseen delay
+    // that causes the task to miss its deadline
+    TickType_t lastWakeTime   = xTaskGetTickCount();
+
     for ( ;; )
     {
         if (xQueueReceive(ppmSignalQueue, &ppmSignal, 0) == pdTRUE) {
+            lastPpmRxTime = xTaskGetTickCount();
+
             if (processPpmSignal(&ppmSignal, &desiredRates,
                                  &rcThrottleOut, &armed) != FC_OK)
             {
@@ -133,6 +181,8 @@ void vControlLoopTask(void *pvParameters)
 
         if (armed && rcThrottle >= THROTTLE_LOW_THRESHOLD) {
             if (xQueueReceive(ratesQueue, &actualRates, 0) == pdTRUE) {
+                lastGyroRxTime = xTaskGetTickCount();
+
                 /*DEBUG_PRINT("ra: %d, pa: %d, ya: %d\n", actualRates.roll,*/
                             /*actualRates.pitch, actualRates.yaw);*/
 
@@ -142,12 +192,17 @@ void vControlLoopTask(void *pvParameters)
                             /*rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);*/
 
                 updateMotors(rcThrottle, rotationOutputsPtr);
+            } else {
+                DEBUG_PRINT("Failed to receive gyro data\n");
             }
         } else {
             resetRateInfo(); // reset integral terms while on ground
             motorsStop();
         }
 
-        vTaskDelay(5);
+        checkControlLoopStatus(lastPpmRxTime, lastGyroRxTime, lastLoopTime);
+        lastLooptime = xTaskGetTickCount();
+
+        vTaskDelayUntil(&lastWakeTime, CONTROL_LOOP_PERIOD_TICKS);
     }
 }

@@ -264,16 +264,19 @@ void vIMUTask(void *pvParameters)
     DEBUG_PRINT("Initialized IMU\n");
 
     Rates_t rates = {0};
+    TickType_t lastWakeTime = xTaskGetTickCount();
     for ( ;; )
     {
         if (getRates(&rates) == FC_OK) {
             xQueueOverwrite(ratesQueue, (void *)&rates);
         }
         else {
-            DEBUG_PRINT("Error reading gyro\n");
+            DEBUG_PRINT("Error getting rates\n");
         }
 
-        vTaskDelay(5 / portTICK_PERIOD_MS);
+        // This should run at the same rate as the control loop
+        // as there is no point running the control loop without new data
+        vTaskDelayUntil(&lastWakeTime, CONTROL_LOOP_PERIOD_TICKS);
     }
 }
 #endif
