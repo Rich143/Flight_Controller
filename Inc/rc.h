@@ -27,5 +27,6 @@ typedef enum tRCChannel {
 
 #define RC_CHANNEL_IN_COUNT    8
 
+#define PPM_FRAME_PERIOD_MS 22 // TODO: determine this
 
 #endif /*defined(__RC_H)*/
