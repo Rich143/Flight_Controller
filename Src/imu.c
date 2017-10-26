@@ -2,6 +2,7 @@
 
 #include "imu.h"
 #include "ImuRegisters.h"
+#include "rate_control.h"
 
 #ifndef __UNIT_TEST
 
@@ -10,7 +11,6 @@
 
 #include "debug.h"
 #include "i2c.h"
-#include "rate_control.h"
 
 #endif
 
@@ -172,12 +172,14 @@ FC_Status IMU_Init(void)
         return FC_ERROR;
     }
 
+#ifndef __UNIT_TEST
     ratesQueue = xQueueCreate(RATES_QUEUE_LENGTH, sizeof(Rates_t));
 
     if (ratesQueue == NULL)
     {
         DEBUG_PRINT("Failed to create rates queue\n");
     }
+#endif
 
     return FC_OK;
 }

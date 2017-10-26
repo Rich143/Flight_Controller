@@ -2,8 +2,13 @@
 #define __IMU_H
 
 #include "fc.h"
+
+#ifndef __UNIT_TEST
 #include "freertos.h"
 #include "queue.h"
+
+extern QueueHandle_t ratesQueue;
+#endif
 
 typedef struct Accel_t {
     int32_t x;
@@ -28,8 +33,6 @@ typedef struct GyroRaw_t {
     int16_t y;
     int16_t z;
 } GyroRaw_t;
-
-extern QueueHandle_t ratesQueue;
 
 FC_Status getAccel(Accel_t *accelData);
 FC_Status getGyro(Gyro_t *gyroData);
