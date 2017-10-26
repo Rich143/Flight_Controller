@@ -10,6 +10,7 @@
 
 #include "debug.h"
 #include "i2c.h"
+#include "rate_control.h"
 
 #endif
 
@@ -46,6 +47,10 @@
 #define GYRO_SENSITIVITY SENSITIVITY_GYROSCOPE_2000
 
 #ifndef __UNIT_TEST
+
+#define RATES_QUEUE_LENGTH 1 // only care about most recent element, so keep it short
+
+QueueHandle_t ratesQueue;
 
 FC_Status AccelGyro_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
@@ -167,6 +172,13 @@ FC_Status IMU_Init(void)
         return FC_ERROR;
     }
 
+    ratesQueue = xQueueCreate(RATES_QUEUE_LENGTH, sizeof(Rates_t));
+
+    if (ratesQueue == NULL)
+    {
+        DEBUG_PRINT("Failed to create rates queue\n");
+    }
+
     return FC_OK;
 }
 
@@ -220,6 +232,24 @@ FC_Status getGyro(Gyro_t *gyroData)
     return FC_OK;
 }
 
+FC_Status getRates(Rates_t *rates)
+{
+    Gyro_t gyro;
+
+    if (getGyro(&gyro) != FC_OK) {
+        DEBUG_PRINT("Error reading gyro\n");
+        return FC_ERROR;
+    }
+
+    /*DEBUG_PRINT("gx: %ld, gy: %ld, gz: %ld\n", gyro.x, gyro.y, gyro.z);*/
+    rates->roll = gyro.x / 1000;
+    rates->pitch = gyro.y / 1000;
+    rates->yaw = gyro.z / 1000;
+
+    return FC_OK;
+}
+
+
 #ifndef __UNIT_TEST
 void vIMUTask(void *pvParameters)
 {
@@ -231,19 +261,17 @@ void vIMUTask(void *pvParameters)
     }
     DEBUG_PRINT("Initialized IMU\n");
 
-    Accel_t accel = {0};
-    Gyro_t gyro = {0};
+    Rates_t rates = {0};
     for ( ;; )
     {
-        if (getAccel(&accel) != FC_OK) {
-            // Do something
+        if (getRates(&rates) == FC_OK) {
+            xQueueOverwrite(ratesQueue, (void *)&rates);
         }
-        if (getGyro(&gyro) != FC_OK) {
-            // Do something
+        else {
+            DEBUG_PRINT("Error reading gyro\n");
         }
-        DEBUG_PRINT("Ax: %ld, Ay: %ld, Az: %ld\n", accel.x, accel.y, accel.z);
-        DEBUG_PRINT("Gx: %ld, Gy: %ld, Gz: %ld\n", gyro.x, gyro.y, gyro.z);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+
+        vTaskDelay(5 / portTICK_PERIOD_MS);
     }
 }
 #endif

@@ -16,6 +16,20 @@ int limit(int val, int min, int max)
     }
 }
 
+int map(int x, int inMin, int inMax, int outMin, int outMax)
+{
+    // Use floating point values here to improve distribution of inputs to
+    // outputs
+    float x_f = (float)x;
+    float inMin_f = (float)inMin;
+    float inMax_f = (float)inMax;
+    float outMin_f = (float)outMin;
+    float outMax_f = (float)outMax;
+
+    return (int)((x_f - inMin_f) * (outMax_f - outMin_f)
+                 / (inMax_f - inMin_f) + outMin_f);
+}
+
 #ifndef __UNIT_TEST
 void Error_Handler(char *msg)
 {

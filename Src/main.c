@@ -79,14 +79,14 @@ int main(void)
     setup();
     printf("System start up. Hardware initialized.\n");
 
-    xTaskCreate(vBlinkTask, "blinkTask", 50, NULL, 3 /* priority */, NULL);
+    xTaskCreate(vBlinkTask, "blinkTask", 50, NULL, 2 /* priority */, NULL);
     /*xTaskCreate(vPrintTask1, "printTask1", 300, NULL, 2 [> priority <], NULL);*/
     /*xTaskCreate(vPrintTask2, "printTask2", 300, NULL, 2 [> priority <], NULL);*/
     xTaskCreate(vDebugTask, "debugTask", 300, NULL, 1 /* priority */, NULL);
     /*xTaskCreate(vPressureSensorTask, "pressureSensorTask", 300, NULL, 3 [> priority <], NULL);*/
-    /*xTaskCreate(vIMUTask, "IMUTask", 300, NULL, 4 [> priority <], NULL);*/
+    xTaskCreate(vIMUTask, "IMUTask", 300, NULL, 4 /* priority */, NULL);
     /*xTaskCreate(vRCTask, "RCTask", 200, NULL, 4 [> priority <], NULL);*/
-    xTaskCreate(vControlLoopTask, "ControlLoopTask", 400, NULL, 4 /* priority */, NULL);
+    xTaskCreate(vControlLoopTask, "ControlLoopTask", 400, NULL, 3 /* priority */, NULL);
 
     vTaskStartScheduler();
 

@@ -14,7 +14,9 @@
 #define MINIMUM_FRAME_SPACE_US 4000
 #define MAXIMUM_PULSE_SPACE_US 2100 // Channel values range from 1000-2000, set this slightly higher so don't resync unnecessarily
 
-#define PPM_QUEUE_LENGTH       10
+// Only care about most recent value, so length one and value is overwritten if
+// not read
+#define PPM_QUEUE_LENGTH       1
 
 TIM_HandleTypeDef htim5;
 QueueHandle_t ppmSignalQueue;
@@ -150,7 +152,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
                     // We have gone through all the channels
                     // This means we received a valid ppm frame
                     // Post this to the queue
-                    xQueueSendFromISR(ppmSignalQueue, (void *)&ppmSignal, &xHigherPriorityTaskWoken);
+                    xQueueOverwriteFromISR(ppmSignalQueue, (void *)&ppmSignal, &xHigherPriorityTaskWoken);
                 }
 
             }

@@ -6,11 +6,19 @@
 
 #define RATE_LOOP_PERIOD_US 100
 
+// Testing on bench
 PID_Gains_t gains = {
-    10, // K_P
-    0.01, // K_I
-    1 // K_D
+    1, // K_P
+    0, // K_I
+    0, // K_D
 };
+
+// Real
+/*PID_Gains_t gains = {*/
+    /*10, // K_P*/
+    /*0.01, // K_I*/
+    /*1 // K_D*/
+/*};*/
 
 Limits_t rateLimits = {
     ROTATION_AXIS_OUTPUT_MIN, // MIN

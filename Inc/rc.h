@@ -18,6 +18,9 @@ typedef enum tRCChannel {
 #define MOTOR_LOW_VAL_US   1000
 #define MOTOR_HIGH_VAL_US  2000
 
+#define MIN_RC_VAL 1000
+#define MAX_RC_VAL 2000
+
 #define THROTTLE_LOW_THRESHOLD 1100 // TODO: test to find val where motors start spinning
 
 #define ESC_STARTUP_TIME 7000 // ESCs expect 1000us pwm during their startup

@@ -38,6 +38,7 @@ typedef enum {
 
 void Error_Handler();
 int limit(int val, int min, int max);
+int map(int x, int inMin, int inMax, int outMin, int outMax);
 
 #endif
 

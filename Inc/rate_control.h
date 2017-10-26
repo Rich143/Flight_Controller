@@ -1,14 +1,15 @@
 #ifndef __RATE_CONTROL_H
 #define __RATE_CONTROL_H
 
-#define ROTATION_AXIS_OUTPUT_MAX 1024
-#define ROTATION_AXIS_OUTPUT_MIN -1024
+#define ROTATION_AXIS_OUTPUT_MAX 500
+#define ROTATION_AXIS_OUTPUT_MIN -500
 
 #define RATES_MAX 500 //! Max rotation rate in dps
 #define RATES_MIN -500 //! Min rotation rate in dps
 
 /**
  * @brief Rotation rates for roll pitch and yaw
+ *        Rotation rates in deg/s
  */
 typedef struct Rates {
     int roll;
