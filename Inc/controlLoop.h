@@ -2,7 +2,10 @@
 #define __CONTROL_LOOP_H
 
 #include "fc.h"
+
+#ifndef __UNIT_TEST
 #include "freertos.h"
+#endif
 
 #define CONTROL_LOOP_PERIOD_TICKS 5 // Note that this also controls IMU task loop time
 #define CONTROL_LOOP_PERIOD_MS    (5 / portTICK_PERIOD_MS)

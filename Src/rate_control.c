@@ -1,15 +1,23 @@
+#include <stdio.h>
+
 #include "fc.h"
+
 #include "pid.h"
 #include "rate_control.h"
 #include "string.h"
-#include "stdio.h"
+#include "controlLoop.h"
 
-#define RATE_LOOP_PERIOD_US 100
+#ifndef __UNIT_TEST
+#include "debug.h"
+#endif
+
+/*#define RATE_LOOP_PERIOD_US (CONTROL_LOOP_PERIOD_MS * 1000)*/
+#define RATE_LOOP_PERIOD_MS (5)
 
 // Testing on bench
 PID_Gains_t gains = {
     1, // K_P
-    0, // K_I
+    0.001, // K_I
     0, // K_D
 };
 
@@ -26,32 +34,39 @@ Limits_t rateLimits = {
 };
 
 ControlInfo_t rollInfo = {
-    RATE_LOOP_PERIOD_US,
-    0,
-    0,
-    0
+    .dt = RATE_LOOP_PERIOD_MS,
+    .integratedError = 0,
+    .saturated = 0,
+    .lastError = 0
 };
 ControlInfo_t pitchInfo = {
-    RATE_LOOP_PERIOD_US,
-    0,
-    0,
-    0
+    .dt = RATE_LOOP_PERIOD_MS,
+    .integratedError = 0,
+    .saturated = 0,
+    .lastError = 0
 };
 ControlInfo_t yawInfo = {
-    RATE_LOOP_PERIOD_US,
-    0,
-    0,
-    0
+    .dt = RATE_LOOP_PERIOD_MS,
+    .integratedError = 0,
+    .saturated = 0,
+    .lastError = 0
 };
 
 RotationAxisOutputs_t rotationOutputs = {0,0,0};
 
 void resetRateInfo()
 {
-    memset(&rollInfo, 0, sizeof(rollInfo));
-    memset(&pitchInfo, 0, sizeof(pitchInfo));
-    memset(&yawInfo, 0, sizeof(yawInfo));
-    memset(&rotationOutputs, 0, sizeof(rotationOutputs));
+    rollInfo.integratedError = 0;
+    rollInfo.saturated = 0;
+    rollInfo.lastError = 0;
+
+    pitchInfo.integratedError = 0;
+    pitchInfo.saturated = 0;
+    pitchInfo.lastError = 0;
+
+    yawInfo.integratedError = 0;
+    yawInfo.saturated = 0;
+    yawInfo.lastError = 0;
 }
 
 RotationAxisOutputs_t* controlRates(Rates_t* actualRates, Rates_t* desiredRates)

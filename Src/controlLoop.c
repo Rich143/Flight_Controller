@@ -118,7 +118,8 @@ FC_Status checkControlLoopStatus(TickType_t lastPpmRxTime,
     {
         // System failure, stop the motors and reset
         motorsStop();
-        NVIC_SystemReset();
+        Error_Handler("system failure\n");
+        /*NVIC_SystemReset();*/
     }
     else
     {
@@ -133,6 +134,7 @@ void vControlLoopTask(void *pvParameters)
     tPpmSignal ppmSignal = {0};
 
     bool armed = false;
+    bool newGyroReceived = false;
     uint32_t rcThrottle = 1000;
 
     Rates_t actualRates;
@@ -179,22 +181,25 @@ void vControlLoopTask(void *pvParameters)
             }
         }
 
+        if (xQueueReceive(ratesQueue, &actualRates, 0) == pdTRUE) {
+            lastGyroRxTime = xTaskGetTickCount();
+            newGyroReceived = true;
+        } else {
+            DEBUG_PRINT("Failed to receive gyro data\n");
+        }
 
         if (armed && rcThrottle >= THROTTLE_LOW_THRESHOLD) {
-            if (xQueueReceive(ratesQueue, &actualRates, 0) == pdTRUE) {
-                lastGyroRxTime = xTaskGetTickCount();
-
+            if (newGyroReceived) {
                 /*DEBUG_PRINT("ra: %d, pa: %d, ya: %d\n", actualRates.roll,*/
-                            /*actualRates.pitch, actualRates.yaw);*/
+                /*actualRates.pitch, actualRates.yaw);*/
 
                 rotationOutputsPtr = controlRates(&actualRates, &desiredRates);
+                newGyroReceived = false;
 
-                /*DEBUG_PRINT("ro: %d, po: %d, yo: %d\n", rotationOutputsPtr->roll,*/
-                            /*rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);*/
+                DEBUG_PRINT("ro: %d, po: %d, yo: %d\n", rotationOutputsPtr->roll,
+                rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);
 
                 updateMotors(rcThrottle, rotationOutputsPtr);
-            } else {
-                DEBUG_PRINT("Failed to receive gyro data\n");
             }
         } else {
             resetRateInfo(); // reset integral terms while on ground
