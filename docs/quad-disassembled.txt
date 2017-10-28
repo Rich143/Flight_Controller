@@ -1,0 +1,9 @@
+Steps taken to disassemble quad for testing:
+-took off top plate
+-cut off zip tie holding antenna in place
+-unplugged rc connector from receiver to fc, goes in pins on top from unlabelled, circle, and pin with label 1
+-unplugged esc connectors from fc, goes into first for from front, in order back right, front right, back left, front left
+-unplugged vtx connector
+-unplugged batt monitor, purple cable that goes to +Batt
+-unplugged beeper, blue cable goes to plus side, adjacent to batt monitor, green goes to minus side
+-spare parts in container in workbench

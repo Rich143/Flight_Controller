@@ -22,3 +22,4 @@ Doxyfile
 *.a
 *.bak
 *.d
+test/Bin/
