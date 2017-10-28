@@ -25,5 +25,6 @@ extern I2C_HandleTypeDef I2cHandle;
 extern SemaphoreHandle_t I2CMutex;
 extern SemaphoreHandle_t I2C_DMA_CompleteSem;
 
+void I2C_ClearBusyFlagErratum(uint32_t timeout);
 void setup_I2C();
 #endif /* defined(__I2C_H) */

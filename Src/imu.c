@@ -92,6 +92,9 @@ FC_Status AccelGyro_RegRead(uint8_t regAddress, uint8_t *val, int size)
     if (rc != HAL_OK)
     {
         DEBUG_PRINT("AccelGyro Reg read fail %d\n", rc);
+        // Attempt to clear busy flag/timeout error
+        I2C_ClearBusyFlagErratum(10);
+        DEBUG_PRINT("Attempted to reset i2c\n");
     }
 
     return rc;
@@ -121,6 +124,8 @@ FC_Status AccelGyro_RegWrite(uint8_t regAddress, uint8_t val)
     if (rc != HAL_OK)
     {
         DEBUG_PRINT("AccelGyro Reg write failed: %d\n", rc);
+        I2C_ClearBusyFlagErratum(10);
+        DEBUG_PRINT("Attempted to reset i2c\n");
         return FC_ERROR;
     }
 

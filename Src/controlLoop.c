@@ -118,8 +118,9 @@ FC_Status checkControlLoopStatus(TickType_t lastPpmRxTime,
     {
         // System failure, stop the motors and reset
         motorsStop();
-        Error_Handler("system failure\n");
-        /*NVIC_SystemReset();*/
+        /*Error_Handler("system failure\n");*/
+        /*while(1);*/
+        NVIC_SystemReset();
     }
     else
     {
