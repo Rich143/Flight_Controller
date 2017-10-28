@@ -74,20 +74,20 @@ void updateMotors(uint32_t rcThrottle, RotationAxisOutputs_t *outputs)
 {
     // Note that motor value limiting is done in the setMotor function
     setMotor(MOTOR_FRONT_LEFT,
-             rcThrottle + outputs->roll
-             - outputs->pitch
+             rcThrottle - outputs->roll
+             + outputs->pitch
              - outputs->yaw);
     setMotor(MOTOR_BACK_LEFT,
-             rcThrottle + outputs->roll
-             + outputs->pitch
-             + outputs->yaw);
-    setMotor(MOTOR_FRONT_RIGHT,
              rcThrottle - outputs->roll
              - outputs->pitch
              + outputs->yaw);
-    setMotor(MOTOR_BACK_RIGHT,
-             rcThrottle - outputs->roll
+    setMotor(MOTOR_FRONT_RIGHT,
+             rcThrottle + outputs->roll
              + outputs->pitch
+             + outputs->yaw);
+    setMotor(MOTOR_BACK_RIGHT,
+             rcThrottle + outputs->roll
+             - outputs->pitch
              - outputs->yaw);
 }
 
@@ -197,8 +197,8 @@ void vControlLoopTask(void *pvParameters)
                 rotationOutputsPtr = controlRates(&actualRates, &desiredRates);
                 newGyroReceived = false;
 
-                DEBUG_PRINT("ro: %d, po: %d, yo: %d\n", rotationOutputsPtr->roll,
-                rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);
+                /*DEBUG_PRINT("ro: %d, po: %d, yo: %d\n", rotationOutputsPtr->roll,*/
+                /*rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);*/
 
                 updateMotors(rcThrottle, rotationOutputsPtr);
             }
