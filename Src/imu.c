@@ -161,6 +161,7 @@ FC_Status IMU_Init(void)
     uint8_t tempreg = 0;
     tempreg |= 0x6 << 5; // set ODR 952 Hz
     tempreg |= GYRO_SCALE << 3; // set full scale 2000 dps
+    tempreg |= 0x3; // set BW bits to 0b11 to set gryo lpf to 100 Hz (assumes ODR 952 Hz)
     if (AccelGyro_RegWrite(CTRL_REG1_G, tempreg) != FC_OK)
     {
         DEBUG_PRINT("Failed to write to gyro\n");
