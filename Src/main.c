@@ -1,4 +1,3 @@
-/* Waterloo Formula Electric 2017 */
 #include <stm32f4xx.h>
 #include <stdbool.h>
 #include <stdint.h>
