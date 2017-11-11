@@ -18,7 +18,7 @@
 PID_Gains_t gains = {
     2, // K_P
     0.01, // K_I
-    0, // K_D
+    1, // K_D
 };
 
 // Real
