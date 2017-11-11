@@ -5,7 +5,7 @@
 #define M_PI 3.14159265358979323846264338327
 #endif
 
-FC_Status lpfInit(uint32_t filterCutoff, uint32_t sampleRate, LPFInfo_t *filterInfo)
+FC_Status lpfInit(uint32_t filterCutoff, uint32_t samplePeriod, LPFInfo_t *filterInfo)
 {
     filterInfo->alpha = (2 * M_PI * sampleRate * filterCutoff)
                         / (2 * M_PI * sampleRate * filterCutoff + 1);
