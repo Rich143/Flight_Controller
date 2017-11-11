@@ -7,8 +7,8 @@
 
 FC_Status lpfInit(uint32_t filterCutoff, uint32_t samplePeriod, LPFInfo_t *filterInfo)
 {
-    filterInfo->alpha = (2 * M_PI * sampleRate * filterCutoff)
-                        / (2 * M_PI * sampleRate * filterCutoff + 1);
+    filterInfo->alpha = (2 * M_PI * samplePeriod * filterCutoff)
+                        / (2 * M_PI * samplePeriod * filterCutoff + 1);
 
     return FC_OK;
 }
