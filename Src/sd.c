@@ -6,6 +6,7 @@
 #include "task.h"
 
 #include "fc.h"
+#include "debug.h"
 
 /**
  * @file Src/sd.c
@@ -48,6 +49,20 @@
 #define SPIx_MOSI_AF                     GPIO_AF5_SPI1
 #define SPIx_NSS_GPIO_PIN                GPIO_PIN_4
 #define SPIx_NSS_GPIO_PORT               GPIOA
+
+/* Definition for SPIx's DMA */
+#define SPIx_TX_DMA_CHANNEL              DMA_CHANNEL_3
+#define SPIx_TX_DMA_STREAM               DMA2_Stream3
+#define SPIx_RX_DMA_CHANNEL              DMA_CHANNEL_3
+#define SPIx_RX_DMA_STREAM               DMA2_Stream2
+
+/* Definition for SPIx's NVIC */
+#define SPIx_IRQn                        SPI1_IRQn
+#define SPIx_IRQHandler                  SPI1_IRQHandler
+#define SPIx_DMA_TX_IRQn                 DMA2_Stream3_IRQn
+#define SPIx_DMA_RX_IRQn                 DMA2_Stream2_IRQn
+#define SPIx_DMA_TX_IRQHandler           DMA2_Stream3_IRQHandler
+#define SPIx_DMA_RX_IRQHandler           DMA2_Stream2_IRQHandler
 
 
 #define SD_SPI_TIMEOUT                   5000
@@ -160,6 +175,8 @@ void SPI_Init(void) {
 void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 {
   GPIO_InitTypeDef  GPIO_InitStruct;
+  static DMA_HandleTypeDef hdma_tx;
+  static DMA_HandleTypeDef hdma_rx;
 
   if(hspi->Instance == SPIx)
   {
@@ -198,11 +215,70 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
     GPIO_InitStruct.Mode      = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Mode      = GPIO_PULLUP;
     HAL_GPIO_Init(SPIx_NSS_GPIO_PORT, &GPIO_InitStruct);
+
+    /*##-3- Configure the DMA streams ##########################################*/
+    /* Configure the DMA handler for Transmission process */
+    hdma_tx.Instance                 = SPIx_TX_DMA_STREAM;
+
+    hdma_tx.Init.Channel             = SPIx_TX_DMA_CHANNEL;
+    hdma_tx.Init.Direction           = DMA_MEMORY_TO_PERIPH;
+    hdma_tx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    hdma_tx.Init.MemInc              = DMA_MINC_ENABLE;
+    hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    hdma_tx.Init.Mode                = DMA_NORMAL;
+    hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
+    hdma_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;         
+    hdma_tx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
+    hdma_tx.Init.MemBurst            = DMA_MBURST_INC4;
+    hdma_tx.Init.PeriphBurst         = DMA_PBURST_INC4;
+
+    HAL_DMA_Init(&hdma_tx);   
+
+    /* Associate the initialized DMA handle to the the SPI handle */
+    __HAL_LINKDMA(hspi, hdmatx, hdma_tx);
+
+    /* Configure the DMA handler for Transmission process */
+    hdma_rx.Instance                 = SPIx_RX_DMA_STREAM;
+
+    hdma_rx.Init.Channel             = SPIx_RX_DMA_CHANNEL;
+    hdma_rx.Init.Direction           = DMA_PERIPH_TO_MEMORY;
+    hdma_rx.Init.PeriphInc           = DMA_PINC_DISABLE;
+    hdma_rx.Init.MemInc              = DMA_MINC_ENABLE;
+    hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+    hdma_rx.Init.Mode                = DMA_NORMAL;
+    hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
+    hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;         
+    hdma_rx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
+    hdma_rx.Init.MemBurst            = DMA_MBURST_INC4;
+    hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4; 
+
+    HAL_DMA_Init(&hdma_rx);
+
+    /* Associate the initialized DMA handle to the the SPI handle */
+    __HAL_LINKDMA(hspi, hdmarx, hdma_rx);
+
+    /*##-4- Configure the NVIC for DMA #########################################*/ 
+    /* NVIC configuration for DMA transfer complete interrupt (SPI3_TX) */
+    HAL_NVIC_SetPriority(SPIx_DMA_TX_IRQn, 0, 1);
+    HAL_NVIC_EnableIRQ(SPIx_DMA_TX_IRQn);
+
+    /* NVIC configuration for DMA transfer complete interrupt (SPI3_RX) */
+    HAL_NVIC_SetPriority(SPIx_DMA_RX_IRQn, 0, 0);   
+    HAL_NVIC_EnableIRQ(SPIx_DMA_RX_IRQn);
+
+    /*##-5- Configure the NVIC for SPI #########################################*/
+    HAL_NVIC_SetPriority(SPIx_IRQn, 0, 2);
+    HAL_NVIC_EnableIRQ(SPIx_IRQn);
   }
 }
 
 void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 {
+  static DMA_HandleTypeDef hdma_tx;
+  static DMA_HandleTypeDef hdma_rx;
+
   if(hspi->Instance == SPIx)
   {
     /*##-1- Reset peripherals ##################################################*/
@@ -216,6 +292,19 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
     HAL_GPIO_DeInit(SPIx_MISO_GPIO_PORT, SPIx_MISO_PIN);
     /* Configure SPI MOSI as alternate function  */
     HAL_GPIO_DeInit(SPIx_MOSI_GPIO_PORT, SPIx_MOSI_PIN);
+
+    /*##-3- Disable the DMA Streams ############################################*/
+    /* De-Initialize the DMA Stream associate to transmission process */
+    HAL_DMA_DeInit(&hdma_tx); 
+    /* De-Initialize the DMA Stream associate to reception process */
+    HAL_DMA_DeInit(&hdma_rx);
+
+    /*##-4- Disable the NVIC for DMA ###########################################*/
+    HAL_NVIC_DisableIRQ(SPIx_DMA_TX_IRQn);
+    HAL_NVIC_DisableIRQ(SPIx_DMA_RX_IRQn);
+
+    /*##-5- Disable the NVIC for SPI ###########################################*/
+    HAL_NVIC_DisableIRQ(SPIx_IRQn);
   }
 }
 
@@ -334,7 +423,7 @@ uint8_t SD_Command_R1(uint8_t cmd, uint32_t arg, uint8_t crc) {
     if (cmd != CMD12) {
         deselect_card();
         if (!select_card()) {
-            printf("Failed to select card\n");
+            DEBUG_PRINT("Failed to select card\n");
             return 0xFF;
         }
     }
@@ -475,7 +564,7 @@ int8_t SD_Read_Block(uint32_t block, uint8_t *data) {
     ret = SD_Command_R1(CMD17, block, 0xFF);
     if (ret != 0x00) {
         // Error
-        printf("CMD17 R1 error during single block read: %d\n", ret);
+        DEBUG_PRINT("CMD17 R1 error during single block read: %d\n", ret);
         return -1;
     }
 
@@ -486,7 +575,7 @@ int8_t SD_Read_Block(uint32_t block, uint8_t *data) {
         if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer,
                             sizeof(rxBuffer), SD_SPI_TIMEOUT) != 0)
         {
-            printf("Spi send failed\n");
+            DEBUG_PRINT("Spi send failed\n");
             return -2;
         }
         if (rxBuffer[0] != 0xFF) {
@@ -495,14 +584,14 @@ int8_t SD_Read_Block(uint32_t block, uint8_t *data) {
     }
 
     if (rxBuffer[0] != 0xFE) {
-        printf("Timed out waiting for data start token\n");
+        DEBUG_PRINT("Timed out waiting for data start token\n");
         return -1;
     }
 
     // Read in the data
     if (HAL_SPI_TransmitReceive(&SpiHandle, txBufferRead, data, BLOCK_SIZE,
                             SD_SPI_TIMEOUT) != 0) {
-        printf("Spi send failed\n");
+        DEBUG_PRINT("Spi send failed\n");
         return -2;
     }
 
@@ -511,7 +600,7 @@ int8_t SD_Read_Block(uint32_t block, uint8_t *data) {
         if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer,
                                     sizeof(rxBuffer), SD_SPI_TIMEOUT) != 0)
         {
-            printf("Spi send failed\n");
+            DEBUG_PRINT("Spi send failed\n");
             return -2;
         }
     }
@@ -541,7 +630,7 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
     ret = SD_Command_R1(CMD18, block, 0xFF);
     if (ret != 0x00) {
         // Error
-        printf("CMD18 R1 error during multi block read: %d\n", ret);
+        DEBUG_PRINT("CMD18 R1 error during multi block read: %d\n", ret);
         return -1;
     }
 
@@ -552,7 +641,7 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
         if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer,
                             sizeof(rxBuffer), SD_SPI_TIMEOUT) != 0)
         {
-            printf("Spi send failed\n");
+            DEBUG_PRINT("Spi send failed\n");
             return -2;
         }
         if (rxBuffer[0] != 0xFF) {
@@ -561,7 +650,7 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
     }
 
     if (rxBuffer[0] != 0xFE) {
-        printf("Timed out waiting for data start token\n");
+        DEBUG_PRINT("Timed out waiting for data start token\n");
         return -1;
     }
 
@@ -571,7 +660,7 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
         // Read in the data
         if (HAL_SPI_TransmitReceive(&SpiHandle, txBufferRead, data, BLOCK_SIZE,
                             SD_SPI_TIMEOUT) != 0) {
-            printf("SPI error during multi block read\n");
+            DEBUG_PRINT("SPI error during multi block read\n");
             return -2;
         }
 
@@ -580,7 +669,7 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
             if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer,
                                 sizeof(rxBuffer), SD_SPI_TIMEOUT) != 0)
             {
-                printf("SPI error during multi block read\n");
+                DEBUG_PRINT("SPI error during multi block read\n");
                 return -2;
             }
         }
@@ -589,9 +678,9 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
         data += BLOCK_SIZE;
     }
 
-    printf("Sending command 12\n");
+    DEBUG_PRINT("Sending command 12\n");
     if (SD_Command_R1(CMD12, 0, 0xFF) == 0xFF) {
-        printf("Stop command error\n"); // Stop receiving
+        DEBUG_PRINT("Stop command error\n"); // Stop receiving
         return -1;
     }
 
@@ -619,7 +708,7 @@ int8_t SD_Write_Block(uint32_t block, const uint8_t *data) {
     ret = SD_Command_R1(CMD24, block, 0xFF);
     if (ret != 0x00) {
         // Error
-        printf("CMD24 R1 error during single block write: %d\n", ret);
+        DEBUG_PRINT("CMD24 R1 error during single block write: %d\n", ret);
         return -1;
     }
 
@@ -633,7 +722,7 @@ int8_t SD_Write_Block(uint32_t block, const uint8_t *data) {
                                  sizeof(txBuffer),
                                  SD_SPI_TIMEOUT);
     if (rc != HAL_OK) {
-        printf("1 SPI error during single block write %d\n", rc);
+        DEBUG_PRINT("1 SPI error during single block write %d\n", rc);
         return -2;
     }
 
@@ -643,7 +732,7 @@ int8_t SD_Write_Block(uint32_t block, const uint8_t *data) {
                                  rxBufferWrite, BLOCK_SIZE,
                                  SD_SPI_TIMEOUT);
     if (rc != HAL_OK) {
-        printf("2 SPI error during single block write %d\n", rc);
+        DEBUG_PRINT("2 SPI error during single block write %d\n", rc);
         return -2;
     }
 
@@ -653,7 +742,7 @@ int8_t SD_Write_Block(uint32_t block, const uint8_t *data) {
         rc = HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer,
                                     sizeof(rxBuffer), SD_SPI_TIMEOUT);
         if (rc != HAL_OK) {
-            printf("3 SPI error during single block write %d\n", rc);
+            DEBUG_PRINT("3 SPI error during single block write %d\n", rc);
             return -2;
         }
     }
@@ -663,13 +752,13 @@ int8_t SD_Write_Block(uint32_t block, const uint8_t *data) {
                                  sizeof(rxBuffer),
                                  SD_SPI_TIMEOUT);
     if (rc != HAL_OK) {
-        printf("4 SPI error during single block write %d\n", rc);
+        DEBUG_PRINT("4 SPI error during single block write %d\n", rc);
         return -2;
     }
 
     if ((rxBuffer[0] & 0x1F) != 0x05) {
         // data response contains error
-        printf("Data response of single block write contains error: %d\n",
+        DEBUG_PRINT("Data response of single block write contains error: %d\n",
                rxBuffer[0] & 0x1F);
         return -1;
     }
@@ -698,7 +787,7 @@ int8_t SD_Write_Multiple_Blocks(uint32_t block, const uint8_t *data, uint32_t co
     ret = SD_Command_R1(CMD25, block, 0xFF);
     if (ret != 0x00) {
         // Error
-        printf("CMD25 R1 error during multi block write: %d\n", ret);
+        DEBUG_PRINT("CMD25 R1 error during multi block write: %d\n", ret);
         return -1;
     }
 
@@ -711,14 +800,14 @@ int8_t SD_Write_Multiple_Blocks(uint32_t block, const uint8_t *data, uint32_t co
         txBuffer[0] = 0xFC;
         if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer, sizeof(txBuffer),
                                     SD_SPI_TIMEOUT) != 0) {
-            printf("SPI error during multi block write\n");
+            DEBUG_PRINT("SPI error during multi block write\n");
             return -2;
         }
 
         // Write the data
         if (HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t *)data, rxBufferWrite, BLOCK_SIZE,
                                     SD_SPI_TIMEOUT) != 0) {
-            printf("SPI error during multi block write\n");
+            DEBUG_PRINT("SPI error during multi block write\n");
             return -2;
         }
 
@@ -728,7 +817,7 @@ int8_t SD_Write_Multiple_Blocks(uint32_t block, const uint8_t *data, uint32_t co
             if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer,
                                         sizeof(rxBuffer), SD_SPI_TIMEOUT) != 0)
             {
-                printf("SPI error during multi block write\n");
+                DEBUG_PRINT("SPI error during multi block write\n");
                 return -2;
             }
         }
@@ -737,13 +826,13 @@ int8_t SD_Write_Multiple_Blocks(uint32_t block, const uint8_t *data, uint32_t co
         if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer,
                                     sizeof(rxBuffer), SD_SPI_TIMEOUT) != 0)
         {
-            printf("SPI error during multi block write\n");
+            DEBUG_PRINT("SPI error during multi block write\n");
             return -2;
         }
 
         if ((rxBuffer[0] & 0x1F) != 0x05) {
             // data response contains error
-            printf("Data response of multi block write contains error: %d\n",
+            DEBUG_PRINT("Data response of multi block write contains error: %d\n",
                    rxBuffer[0] & 0x1F);
             return -1;
         }
@@ -758,7 +847,7 @@ int8_t SD_Write_Multiple_Blocks(uint32_t block, const uint8_t *data, uint32_t co
     txBuffer[0] = 0xFD;
     if (HAL_SPI_TransmitReceive(&SpiHandle, txBuffer, rxBuffer, sizeof(txBuffer),
                                 SD_SPI_TIMEOUT) != 0) {
-        printf("SPI error during multi block write\n");
+        DEBUG_PRINT("SPI error during multi block write\n");
         return -2;
     }
 
@@ -804,7 +893,7 @@ DSTATUS disk_initialize(BYTE drv) {
 
     if (i == SD_SPI_NUM_RETRIES) {
         // Card did not respond to initialization
-        printf("Card did not respond to CMD0 initialization\n");
+        DEBUG_PRINT("Card did not respond to CMD0 initialization\n");
         return STA_NOINIT;
     }
 
@@ -812,7 +901,7 @@ DSTATUS disk_initialize(BYTE drv) {
         if (SD_Command_R7(CMD8, 0x000001AA, 0x87, response) != 0)
         {
             // error
-            printf("Command R7 error sending CMD8\n");
+            DEBUG_PRINT("Command R7 error sending CMD8\n");
             return STA_NOINIT;
         }
 
@@ -824,7 +913,7 @@ DSTATUS disk_initialize(BYTE drv) {
 
     if (i == SD_SPI_NUM_RETRIES) {
         // Card did not respond to initialization
-        printf("Card did not respond to CMD8 initialization\n");
+        DEBUG_PRINT("Card did not respond to CMD8 initialization\n");
         return STA_NOINIT;
     }
 
@@ -833,15 +922,15 @@ DSTATUS disk_initialize(BYTE drv) {
         // implemented in this code)
         // TODO: check if this is illegal command, and if so this
         // is an old SD protocol so should act differently
-        printf("Card does not support CMD8\n");
+        DEBUG_PRINT("Card does not support CMD8\n");
         return STA_NOINIT;
     } else if (response[3] != 0x01) {
         // Incorrect voltage level support
-        printf("Incorrect voltage level support\n");
+        DEBUG_PRINT("Incorrect voltage level support\n");
         return STA_NOINIT;
     } else if (response[4] != 0xAA) {
         // Error, this is not supposed to happen
-        printf("Other CMD8 error\n");
+        DEBUG_PRINT("Other CMD8 error\n");
         return STA_NOINIT;
     }
 
@@ -857,29 +946,29 @@ DSTATUS disk_initialize(BYTE drv) {
 
     if (i == SD_SPI_NUM_RETRIES) {
         // Card did not come out of idle
-        printf("Card did not come out of idle\n");
+        DEBUG_PRINT("Card did not come out of idle\n");
         return STA_NOINIT;
     }
 
     if (SD_Command_R7(CMD58, 0x00000000, 0xFF, response) !=0) {
         // error
-        printf("CMD R7 error sending CMD 58\n");
+        DEBUG_PRINT("CMD R7 error sending CMD 58\n");
         return STA_NOINIT;
     }
 
     if (response[1] & 0x40) {
         // SDHC
-        printf("Card type SDHC\n");
+        DEBUG_PRINT("Card type SDHC\n");
     } else {
         // SDSC
-        printf("Card type SDSC\n");
+        DEBUG_PRINT("Card type SDSC\n");
     }
 
     deselect_card();
 
     // Successfully initialized
     Stat &= ~STA_NOINIT; // Clear STA_NOINIT flag
-    printf("Succesfully initialized\n");
+    DEBUG_PRINT("Succesfully initialized\n");
     return Stat;
 }
 
