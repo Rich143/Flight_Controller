@@ -8,7 +8,7 @@
 #endif
 
 #define CONTROL_LOOP_PERIOD_TICKS 5 // Note that this also controls IMU task loop time
-#define CONTROL_LOOP_PERIOD_MS    (5 / portTICK_PERIOD_MS)
+#define CONTROL_LOOP_PERIOD_MS    (CONTROL_LOOP_PERIOD_TICKS / portTICK_PERIOD_MS)
 
 /*
  * Timeout values, if no data is received within these periods, system failure is
