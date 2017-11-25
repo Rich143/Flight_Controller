@@ -1,9 +1,10 @@
-// Waterloo Hybrid 2016
-
 #include <stdio.h>
 #include <string.h>
 
 #include "stm32f4xx_hal.h"
+
+#include "freertos.h"
+#include "semphr.h"
 
 #include "fc.h"
 #include "pins_common.h"
@@ -11,6 +12,7 @@
 #include "debug.h"
 
 QueueHandle_t printQueue;
+SemaphoreHandle_t uartMut = NULL;
 
 #define UARTx_BAUD_RATE            115200
 #define UARTx_TIMEOUT              1000
@@ -74,6 +76,13 @@ void uart_init(void) {
         Error_Handler("UART init fail");
     }
 
+    // Create I2C bus mutex
+    uartMut = xSemaphoreCreateMutex();
+
+    if( uartMut == NULL )
+    {
+        Error_Handler("Failed to create UART mutex");
+    }
 }
 
 void debug_init(void)
@@ -95,6 +104,31 @@ int _write(int file, char* data, int len) {
     return len;
 }
 
+void flushDebugMessages(void)
+{
+    char buffer[PRINT_QUEUE_STRING_SIZE] = {0};
+
+    xSemaphoreTake(uartMut, portMAX_DELAY);
+
+    // print out all the queued messages
+    while(xQueueReceive(printQueue, buffer, 0) == pdTRUE) {
+        int len = strlen(buffer);
+        HAL_UART_Transmit(&UartHandle, (uint8_t*)buffer, len, UARTx_TIMEOUT);
+    }
+
+    xSemaphoreGive(uartMut);
+}
+
+void writeDebugMessage(char *buf)
+{
+    xSemaphoreTake(uartMut, portMAX_DELAY);
+
+    int len = strlen(buf);
+    HAL_UART_Transmit(&UartHandle, (uint8_t*)buf, len, UARTx_TIMEOUT);
+
+    xSemaphoreGive(uartMut);
+}
+
 
 void vDebugTask(void *pvParameters)
 {
@@ -104,8 +138,12 @@ void vDebugTask(void *pvParameters)
     {
         if (xQueueReceive(printQueue, buffer, portMAX_DELAY) == pdTRUE)
         {
+            xSemaphoreTake(uartMut, portMAX_DELAY);
+
             int len = strlen(buffer);
             HAL_UART_Transmit(&UartHandle, (uint8_t*)buffer, len, UARTx_TIMEOUT);
+
+            xSemaphoreGive(uartMut);
         }
     }
 }

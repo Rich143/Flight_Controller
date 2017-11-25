@@ -56,4 +56,6 @@ extern QueueHandle_t printQueue;
 
 void vDebugTask(void *pvParameters);
 void debug_init(void);
+void flushDebugMessages(void);
+void writeDebugMessage(char *buf);
 #endif
