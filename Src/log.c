@@ -61,6 +61,7 @@ FC_Status logWriteTest()
         return FC_ERROR;
     }
 
+    DEBUG_PRINT("Writing to file\n");
     int written = f_printf(&fil, "Hello to file\n");
 
     if (written < 0)
@@ -86,6 +87,7 @@ void vLogTask(void *pvParameters)
 {
    DEBUG_PRINT("Init log\n");
    logInit();
+   DEBUG_PRINT("Initialized log\n");
 
    for ( ;; )
    {

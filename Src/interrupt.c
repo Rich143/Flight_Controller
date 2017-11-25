@@ -4,6 +4,7 @@
 #include "cmsis_os.h"
 #include "i2c.h"
 #include "ppm.h"
+#include "sd.h"
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -140,4 +141,34 @@ void SysTick_Handler(void)
 void TIM5_IRQHandler(void)
 {
     HAL_TIM_IRQHandler(&htim5);
+}
+
+/**
+  * @brief  This function handles DMA Rx interrupt request.  
+  * @param  None
+  * @retval None    
+  */
+void SPIx_DMA_RX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle.hdmarx);
+}
+
+/**
+  * @brief  This function handles DMA Tx interrupt request.
+  * @param  None
+  * @retval None  
+  */
+void SPIx_DMA_TX_IRQHandler(void)
+{
+  HAL_DMA_IRQHandler(SpiHandle.hdmatx);
+}
+
+/**
+  * @brief  This function handles SPI interrupt request.
+  * @param  None
+  * @retval None
+  */
+void SPIx_IRQHandler(void)
+{
+  HAL_SPI_IRQHandler(&SpiHandle);
 }

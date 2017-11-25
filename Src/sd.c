@@ -6,6 +6,7 @@
 #include "task.h"
 
 #include "fc.h"
+#include "sd.h"
 #include "debug.h"
 
 /**
@@ -30,6 +31,7 @@
 
 #define SPIx                             SPI1
 #define SPIx_CLK_ENABLE()                __HAL_RCC_SPI1_CLK_ENABLE()
+#define DMAx_CLK_ENABLE()                __HAL_RCC_DMA2_CLK_ENABLE()
 #define SPIx_SCK_GPIO_CLK_ENABLE()       __HAL_RCC_GPIOA_CLK_ENABLE()
 #define SPIx_MISO_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
 #define SPIx_MOSI_GPIO_CLK_ENABLE()      __HAL_RCC_GPIOA_CLK_ENABLE()
@@ -55,14 +57,6 @@
 #define SPIx_TX_DMA_STREAM               DMA2_Stream3
 #define SPIx_RX_DMA_CHANNEL              DMA_CHANNEL_3
 #define SPIx_RX_DMA_STREAM               DMA2_Stream2
-
-/* Definition for SPIx's NVIC */
-#define SPIx_IRQn                        SPI1_IRQn
-#define SPIx_IRQHandler                  SPI1_IRQHandler
-#define SPIx_DMA_TX_IRQn                 DMA2_Stream3_IRQn
-#define SPIx_DMA_RX_IRQn                 DMA2_Stream2_IRQn
-#define SPIx_DMA_TX_IRQHandler           DMA2_Stream3_IRQHandler
-#define SPIx_DMA_RX_IRQHandler           DMA2_Stream2_IRQHandler
 
 
 #define SD_SPI_TIMEOUT                   5000
@@ -131,6 +125,14 @@
 #define CS_DISABLE() (HAL_GPIO_WritePin(SPIx_NSS_GPIO_PORT, SPIx_NSS_GPIO_PIN,\
                                        GPIO_PIN_SET))
 
+#define SD_DELAY(delay_ms) \
+    do { \
+        if (taskSCHEDULER_RUNNING == xTaskGetSchedulerState()) { \
+            vTaskDelay(delay_ms / portTICK_PERIOD_MS); \
+        } else { \
+            HAL_Delay(delay_ms); \
+        } \
+    } while (0)
 
 /* Private variables */
 
@@ -187,6 +189,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
     SPIx_MOSI_GPIO_CLK_ENABLE();
     /* Enable SPI clock */
     SPIx_CLK_ENABLE();
+    /* Enable DMA clock */
+    DMAx_CLK_ENABLE();
 
     /*##-2- Configure peripheral GPIO ##########################################*/
     /* SPI SCK GPIO pin configuration  */
@@ -228,12 +232,12 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
     hdma_tx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
     hdma_tx.Init.Mode                = DMA_NORMAL;
     hdma_tx.Init.Priority            = DMA_PRIORITY_LOW;
-    hdma_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;         
+    hdma_tx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
     hdma_tx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
     hdma_tx.Init.MemBurst            = DMA_MBURST_INC4;
     hdma_tx.Init.PeriphBurst         = DMA_PBURST_INC4;
 
-    HAL_DMA_Init(&hdma_tx);   
+    HAL_DMA_Init(&hdma_tx);
 
     /* Associate the initialized DMA handle to the the SPI handle */
     __HAL_LINKDMA(hspi, hdmatx, hdma_tx);
@@ -249,27 +253,27 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
     hdma_rx.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
     hdma_rx.Init.Mode                = DMA_NORMAL;
     hdma_rx.Init.Priority            = DMA_PRIORITY_HIGH;
-    hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;         
+    hdma_rx.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
     hdma_rx.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
     hdma_rx.Init.MemBurst            = DMA_MBURST_INC4;
-    hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4; 
+    hdma_rx.Init.PeriphBurst         = DMA_PBURST_INC4;
 
     HAL_DMA_Init(&hdma_rx);
 
     /* Associate the initialized DMA handle to the the SPI handle */
     __HAL_LINKDMA(hspi, hdmarx, hdma_rx);
 
-    /*##-4- Configure the NVIC for DMA #########################################*/ 
+    /*##-4- Configure the NVIC for DMA #########################################*/
     /* NVIC configuration for DMA transfer complete interrupt (SPI3_TX) */
-    HAL_NVIC_SetPriority(SPIx_DMA_TX_IRQn, 0, 1);
+    HAL_NVIC_SetPriority(SPIx_DMA_TX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(SPIx_DMA_TX_IRQn);
 
     /* NVIC configuration for DMA transfer complete interrupt (SPI3_RX) */
-    HAL_NVIC_SetPriority(SPIx_DMA_RX_IRQn, 0, 0);   
+    HAL_NVIC_SetPriority(SPIx_DMA_RX_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(SPIx_DMA_RX_IRQn);
 
     /*##-5- Configure the NVIC for SPI #########################################*/
-    HAL_NVIC_SetPriority(SPIx_IRQn, 0, 2);
+    HAL_NVIC_SetPriority(SPIx_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY, 0);
     HAL_NVIC_EnableIRQ(SPIx_IRQn);
   }
 }
@@ -295,7 +299,7 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 
     /*##-3- Disable the DMA Streams ############################################*/
     /* De-Initialize the DMA Stream associate to transmission process */
-    HAL_DMA_DeInit(&hdma_tx); 
+    HAL_DMA_DeInit(&hdma_tx);
     /* De-Initialize the DMA Stream associate to reception process */
     HAL_DMA_DeInit(&hdma_rx);
 
@@ -354,6 +358,8 @@ int wait_ready(uint32_t wait) {
         if (response == 0xFF) {
             break;
         }
+
+        SD_DELAY(1); // TODO: Find appropriate delay
     }
 
     return (response == 0xFF) ? 1 : 0;
@@ -589,10 +595,15 @@ int8_t SD_Read_Block(uint32_t block, uint8_t *data) {
     }
 
     // Read in the data
-    if (HAL_SPI_TransmitReceive(&SpiHandle, txBufferRead, data, BLOCK_SIZE,
-                            SD_SPI_TIMEOUT) != 0) {
+    if (HAL_SPI_TransmitReceive_DMA(&SpiHandle, txBufferRead, data, BLOCK_SIZE) != 0) {
         DEBUG_PRINT("Spi send failed\n");
         return -2;
+    }
+
+    // Wait for data to be read
+    while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+    {
+        SD_DELAY(10); // Disk write takes approximately 10 ms
     }
 
     // Read in the checksum
@@ -658,10 +669,17 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
     // This means this could all be done in one transfer
     while (count != 0) {
         // Read in the data
-        if (HAL_SPI_TransmitReceive(&SpiHandle, txBufferRead, data, BLOCK_SIZE,
-                            SD_SPI_TIMEOUT) != 0) {
+        if (HAL_SPI_TransmitReceive_DMA(&SpiHandle, txBufferRead, data, BLOCK_SIZE)
+            != 0)
+        {
             DEBUG_PRINT("SPI error during multi block read\n");
             return -2;
+        }
+
+        // Wait for data to be read
+        while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+        {
+            SD_DELAY(10); // Disk write takes approximately 10 ms
         }
 
         // Read in the checksum
@@ -728,12 +746,18 @@ int8_t SD_Write_Block(uint32_t block, const uint8_t *data) {
 
 
     // Write the data
-    rc = HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t *)data,
-                                 rxBufferWrite, BLOCK_SIZE,
-                                 SD_SPI_TIMEOUT);
+    rc = HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t *)data,
+                                 rxBufferWrite, BLOCK_SIZE);
+
     if (rc != HAL_OK) {
         DEBUG_PRINT("2 SPI error during single block write %d\n", rc);
         return -2;
+    }
+
+    // Wait for data to be written
+    while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+    {
+        SD_DELAY(10); // Disk write takes approximately 10 ms
     }
 
     txBuffer[0] = 0xFF;
@@ -805,10 +829,17 @@ int8_t SD_Write_Multiple_Blocks(uint32_t block, const uint8_t *data, uint32_t co
         }
 
         // Write the data
-        if (HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t *)data, rxBufferWrite, BLOCK_SIZE,
-                                    SD_SPI_TIMEOUT) != 0) {
+        if (HAL_SPI_TransmitReceive_DMA(&SpiHandle, (uint8_t *)data, rxBufferWrite, BLOCK_SIZE)
+            != 0)
+        {
             DEBUG_PRINT("SPI error during multi block write\n");
             return -2;
+        }
+
+        // Wait for data to be written
+        while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+        {
+            SD_DELAY(10); // Disk write takes approximately 10 ms
         }
 
         txBuffer[0] = 0xFF;
@@ -888,7 +919,7 @@ DSTATUS disk_initialize(BYTE drv) {
         {
             break; // Card is ready
         }
-        HAL_Delay(100);
+        SD_DELAY(100);
     }
 
     if (i == SD_SPI_NUM_RETRIES) {
@@ -908,7 +939,7 @@ DSTATUS disk_initialize(BYTE drv) {
         if (response[0] != 0xFF) {
             break;
         }
-        HAL_Delay(100);
+        SD_DELAY(100);
     }
 
     if (i == SD_SPI_NUM_RETRIES) {
@@ -941,7 +972,7 @@ DSTATUS disk_initialize(BYTE drv) {
         if (0x00 == SD_Command_R1(ACMD41, 0x40000000, 0xFF)) {
             break;
         }
-        HAL_Delay(100);
+        SD_DELAY(100);
     }
 
     if (i == SD_SPI_NUM_RETRIES) {
