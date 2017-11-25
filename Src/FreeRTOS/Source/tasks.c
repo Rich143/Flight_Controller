@@ -4094,6 +4094,9 @@ TCB_t *pxTCB;
 			/* Avoid divide by zero errors. */
 			if( ulTotalTime > 0 )
 			{
+                sprintf(pcWriteBuffer, "\n\nStats:\n");
+                pcWriteBuffer += strlen( pcWriteBuffer );
+
 				/* Create a human readable table from the binary data. */
 				for( x = 0; x < uxArraySize; x++ )
 				{
@@ -4117,7 +4120,7 @@ TCB_t *pxTCB;
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. */
-							sprintf( pcWriteBuffer, "\t%u\t\t%u%%\r\n", ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter, ( unsigned int ) ulStatsAsPercentage );
+							sprintf( pcWriteBuffer, "\t%u,\t\t%u%%\r\n", ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter, ( unsigned int ) ulStatsAsPercentage );
 						}
 						#endif
 					}
@@ -4133,13 +4136,16 @@ TCB_t *pxTCB;
 						{
 							/* sizeof( int ) == sizeof( long ) so a smaller
 							printf() library can be used. */
-							sprintf( pcWriteBuffer, "\t%u\t\t<1%%\r\n", ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter );
+							sprintf( pcWriteBuffer, "\t%u,\t\t<1%%\r\n", ( unsigned int ) pxTaskStatusArray[ x ].ulRunTimeCounter );
 						}
 						#endif
 					}
 
 					pcWriteBuffer += strlen( pcWriteBuffer );
 				}
+
+                sprintf(pcWriteBuffer, "End\n\n");
+                pcWriteBuffer += strlen( pcWriteBuffer );
 			}
 			else
 			{

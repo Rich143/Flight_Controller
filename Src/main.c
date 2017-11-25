@@ -34,6 +34,24 @@ void vPrintTask2( void *pvParameters )
     }
 }
 
+void vStatsTask( void *pvParameter)
+{
+    /*statsTimerInit();*/
+
+    for ( ;; )
+    {
+        /*runTimeStatsGetTimerVal();*/
+        // According to docs, ~40 bytes * num tasks is enough for the buffer
+        unsigned int statsBufLen = 45 * uxTaskGetNumberOfTasks();
+        char statsBuf[statsBufLen];
+
+        vTaskGetRunTimeStats(statsBuf);
+        writeDebugMessage(statsBuf);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+}
+
+
 void vBlinkTask( void *pvParameters )
 {
     for( ;; )
@@ -88,6 +106,7 @@ int main(void)
     /*xTaskCreate(vRCTask, "RCTask", 200, NULL, 4 [> priority <], NULL);*/
     /*xTaskCreate(vControlLoopTask, "ControlLoopTask", 400, NULL, 3 [> priority <], NULL);*/
     xTaskCreate(vLogTask, "LogTask", 800, NULL, 3 /* priority */, NULL);
+    xTaskCreate(vStatsTask, "StatsTask", 300, NULL, 1 /* priority */, NULL);
 
     vTaskStartScheduler();
 

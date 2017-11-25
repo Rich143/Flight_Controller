@@ -66,7 +66,7 @@ SRC := $(wildcard $(SRC_DIR)/*.c) \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/*.c) \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/portable/GCC/ARM_CM4F/*.c) \
 	   $(addprefix $(COMMON_LIB_DIR)/Src/, $(COMMON_LIB_SRC)) \
-	   $(SRC_DIR)/FreeRTOS/Source/portable/MemMang/heap_1.c \
+	   $(SRC_DIR)/FreeRTOS/Source/portable/MemMang/heap_4.c \
 	   $(wildcard $(SRC_DIR)/FreeRTOS/Source/CMSIS_RTOS/*.c) \
 	   $(SRC_DIR)/FatFs/src/ff.c \
 	   stm32f4xx_hal_driver/CMSIS/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
