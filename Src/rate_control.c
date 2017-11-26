@@ -69,18 +69,20 @@ void resetRateInfo()
     yawInfo.lastError = 0;
 }
 
-RotationAxisOutputs_t* controlRates(Rates_t* actualRates, Rates_t* desiredRates)
+RotationAxisOutputs_t* controlRates(Rates_t* actualRates, Rates_t* desiredRates,
+                                    PidAllAxis_t *PIDs)
 {
     ASSERT(actualRates);
     ASSERT(desiredRates);
+    ASSERT(PIDs);
 
     int rollError = desiredRates->roll - actualRates->roll;
     int pitchError = desiredRates->pitch - actualRates->pitch;
     int yawError =  desiredRates->yaw - actualRates->yaw;
 
-    rotationOutputs.roll = controlLoop(rollError, &rollInfo, &gains, &rateLimits);
-    rotationOutputs.pitch = controlLoop(pitchError, &pitchInfo, &gains, &rateLimits);
-    rotationOutputs.yaw = controlLoop(yawError, &yawInfo, &gains, &rateLimits);
+    rotationOutputs.roll = controlLoop(rollError, &rollInfo, &gains, &rateLimits, &(PIDs->roll));
+    rotationOutputs.pitch = controlLoop(pitchError, &pitchInfo, &gains, &rateLimits, &(PIDs->pitch));
+    rotationOutputs.yaw = controlLoop(yawError, &yawInfo, &gains, &rateLimits, &(PIDs->yaw));
 
     return &rotationOutputs;
 }

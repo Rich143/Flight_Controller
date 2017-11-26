@@ -1,6 +1,8 @@
 #ifndef __RATE_CONTROL_H
 #define __RATE_CONTROL_H
 
+#include "pid.h"
+
 #define ROTATION_AXIS_OUTPUT_MAX 500
 #define ROTATION_AXIS_OUTPUT_MIN -500
 
@@ -17,6 +19,13 @@ typedef struct Rates {
     int yaw;
 } Rates_t;
 
+typedef struct PidAllAxis_t
+{
+    PidValues_t roll;
+    PidValues_t pitch;
+    PidValues_t yaw;
+} PidAllAxis_t;
+
 /**
  * @brief Intermediate representation of desired motor outputs.
  * Each int represents the desired power output for that roll axis. These
@@ -28,6 +37,6 @@ typedef struct RotationAxisOutputs {
     int yaw;
 } RotationAxisOutputs_t;
 
-RotationAxisOutputs_t* controlRates(Rates_t* actualRates, Rates_t* desiredRates);
+RotationAxisOutputs_t* controlRates(Rates_t* actualRates, Rates_t* desiredRates, PidAllAxis_t *PIDs);
 void resetRateInfo();
 #endif

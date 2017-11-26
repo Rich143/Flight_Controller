@@ -19,8 +19,14 @@ typedef struct Limits {
     int max;
 } Limits_t;
 
+typedef struct PidValues_t {
+   int p;
+   int i;
+   int d;
+} PidValues_t;
+
 int controlLoop(int error, ControlInfo_t *info, PID_Gains_t *gains,
-                Limits_t* limits);
+                Limits_t* limits, PidValues_t *pid);
 
 #endif
 

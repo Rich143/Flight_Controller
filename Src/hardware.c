@@ -8,6 +8,7 @@
 #include "i2c.h"
 #include "ppm.h"
 #include "motors.h"
+#include "log.h"
 
 /** System Clock Configuration
  */
@@ -230,6 +231,7 @@ void hardware_init() {
     setup_outputs();
     setup_I2C();
     debug_init();
+    logInit();
     ppmInit();
     motorsInit();
 }

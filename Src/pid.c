@@ -19,11 +19,12 @@ int satLimit(int val, int min, int max, int *saturated)
 
 
 int controlLoop(int error, ControlInfo_t *info, PID_Gains_t *gain,
-                Limits_t* limits)
+                Limits_t* limits, PidValues_t *pid)
 {
     ASSERT(gain);
     ASSERT(info);
     ASSERT(limits);
+    ASSERT(pid);
 
     if ((info->saturated > 0 && error > 0)
         || (info->saturated < 0 && error < 0)) {
@@ -35,8 +36,11 @@ int controlLoop(int error, ControlInfo_t *info, PID_Gains_t *gain,
                                          limits->max, &info->saturated);
     }
 
-    int ret = error * gain->K_P + info->integratedError
-        + (error - info->lastError) * gain->K_D * info->dt;
+    pid->p = error * gain->K_P;
+    pid->i = info->integratedError;
+    pid->d = (error - info->lastError) * gain->K_D * info->dt;
+
+    int ret = pid->p + pid->i + pid->d;
 
     ret = limit(ret, limits->min, limits->max);
 

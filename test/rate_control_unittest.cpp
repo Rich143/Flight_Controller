@@ -28,6 +28,7 @@ class RateControlTest : public ::testing::Test {
 
         Rates_t actualRates;
         Rates_t desiredRates;
+        PidAllAxis_t PIDs;
 };
 
 TEST_F(RateControlTest, rollPositive)
@@ -40,7 +41,7 @@ TEST_F(RateControlTest, rollPositive)
     actualRates.pitch = 0;
     actualRates.yaw = 0;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_GT(outputs->roll, 0);
     EXPECT_EQ(outputs->pitch, 0);
@@ -59,7 +60,7 @@ TEST_F(RateControlTest, rollNegative)
     actualRates.pitch = 0;
     actualRates.yaw = 0;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_LT(outputs->roll, 0);
     EXPECT_EQ(outputs->pitch, 0);
@@ -78,7 +79,7 @@ TEST_F(RateControlTest, pitchPositive)
     actualRates.pitch = 0;
     actualRates.yaw = 0;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_EQ(outputs->roll, 0);
     EXPECT_GT(outputs->pitch, 0);
@@ -97,7 +98,7 @@ TEST_F(RateControlTest, pitchNegative)
     actualRates.pitch = 0;
     actualRates.yaw = 0;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_EQ(outputs->roll, 0);
     EXPECT_LT(outputs->pitch, 0);
@@ -116,7 +117,7 @@ TEST_F(RateControlTest, yawPositive)
     actualRates.pitch = 0;
     actualRates.yaw = 0;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_EQ(outputs->roll, 0);
     EXPECT_EQ(outputs->pitch, 0);
@@ -135,7 +136,7 @@ TEST_F(RateControlTest, yawNegative)
     actualRates.pitch = 0;
     actualRates.yaw = 0;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_EQ(outputs->roll, 0);
     EXPECT_EQ(outputs->pitch, 0);
@@ -154,7 +155,7 @@ TEST_F(RateControlTest, rollPitchYawCombo)
     actualRates.pitch = -100;
     actualRates.yaw = 0;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_LT(outputs->roll, 0);
     EXPECT_GT(outputs->pitch, 0);
@@ -173,7 +174,7 @@ TEST_F(RateControlTest, limitsPositive)
     actualRates.pitch = RATES_MIN;
     actualRates.yaw = RATES_MIN;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_GT(outputs->roll, 0);
     EXPECT_GT(outputs->pitch, 0);
@@ -192,7 +193,7 @@ TEST_F(RateControlTest, limitsNegative)
     actualRates.pitch = RATES_MAX;
     actualRates.yaw = RATES_MAX;
 
-    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates);
+    RotationAxisOutputs_t *outputs = controlRates(&actualRates, &desiredRates, &PIDs);
 
     EXPECT_LT(outputs->roll, 0);
     EXPECT_LT(outputs->pitch, 0);

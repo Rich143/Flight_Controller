@@ -23,21 +23,22 @@ class PIDTest : public ::testing::Test {
         ControlInfo_t controlInfo;
         Limits_t limits;
         PID_Gains_t gains;
+        PidValues_t PIDs;
 };
 
 TEST_F(PIDTest, zeroErrorZeroOutInitially)
 {
-   EXPECT_EQ(0, controlLoop(0, &controlInfo, &gains, &limits));
+   EXPECT_EQ(0, controlLoop(0, &controlInfo, &gains, &limits, &PIDs));
 }
 
 TEST_F(PIDTest, posErrorPosOut)
 {
-    EXPECT_GT(controlLoop(10000, &controlInfo, &gains, &limits), 0);
+    EXPECT_GT(controlLoop(10000, &controlInfo, &gains, &limits, &PIDs), 0);
 }
 
 TEST_F(PIDTest, negErrorNegOut)
 {
-    EXPECT_LT(controlLoop(-10000, &controlInfo, &gains, &limits), 0);
+    EXPECT_LT(controlLoop(-10000, &controlInfo, &gains, &limits, &PIDs), 0);
 }
 
 TEST_F(PIDTest, limits)
@@ -45,8 +46,8 @@ TEST_F(PIDTest, limits)
     int errorMax = (limits.max + 1) / gains.K_P;
     int errorMin = (limits.min - 1) / gains.K_P;
 
-    EXPECT_EQ(limits.max, controlLoop(errorMax, &controlInfo, &gains, &limits));
-    EXPECT_EQ(limits.min, controlLoop(errorMin, &controlInfo, &gains, &limits));
+    EXPECT_EQ(limits.max, controlLoop(errorMax, &controlInfo, &gains, &limits, &PIDs));
+    EXPECT_EQ(limits.min, controlLoop(errorMin, &controlInfo, &gains, &limits, &PIDs));
 }
 
 TEST_F(PIDTest, outputIncreasesWithTime)
@@ -55,8 +56,8 @@ TEST_F(PIDTest, outputIncreasesWithTime)
     // Set the last error to the same as the current to ensure the derivative term doesn't cause the output to saturate
     controlInfo.lastError = posError;
 
-    int firstOutput = controlLoop(posError, &controlInfo, &gains, &limits);
-    int secondOutput = controlLoop(posError, &controlInfo, &gains, &limits);
+    int firstOutput = controlLoop(posError, &controlInfo, &gains, &limits, &PIDs);
+    int secondOutput = controlLoop(posError, &controlInfo, &gains, &limits, &PIDs);
 
     EXPECT_GT(secondOutput, firstOutput);
 }
@@ -67,8 +68,8 @@ TEST_F(PIDTest, outputDecreasesWithTime)
     // Set the last error to the same as the current to ensure the derivative term doesn't cause the output to saturate
     controlInfo.lastError = negError;
 
-    int firstOutput = controlLoop(negError, &controlInfo, &gains, &limits);
-    int secondOutput = controlLoop(negError, &controlInfo, &gains, &limits);
+    int firstOutput = controlLoop(negError, &controlInfo, &gains, &limits, &PIDs);
+    int secondOutput = controlLoop(negError, &controlInfo, &gains, &limits, &PIDs);
 
     EXPECT_LT(secondOutput, firstOutput);
 }
@@ -78,13 +79,13 @@ TEST_F(PIDTest, integratedErrorSaturates)
 {
     int error = limits.max / gains.K_I / controlInfo.dt -1;
 
-    controlLoop(error, &controlInfo, &gains, &limits);
+    controlLoop(error, &controlInfo, &gains, &limits, &PIDs);
     int firstError = controlInfo.integratedError;
 
-    controlLoop(error, &controlInfo, &gains, &limits);
+    controlLoop(error, &controlInfo, &gains, &limits, &PIDs);
     int secondError = controlInfo.integratedError;
 
-    controlLoop(error, &controlInfo, &gains, &limits);
+    controlLoop(error, &controlInfo, &gains, &limits, &PIDs);
     int thirdError = controlInfo.integratedError;
 
     EXPECT_GT(secondError, firstError);
@@ -101,13 +102,13 @@ TEST_F(PIDTest, derivativeTest)
     controlInfo.lastError = error;
 
     // Change slowly
-    controlLoop(error, &controlInfo, &gains, &limits);
-    controlLoop(error + (errorChange/2), &controlInfo, &gains, &limits);
-    int slowChangeOutput = controlLoop(error + errorChange, &controlInfo, &gains, &limits);
+    controlLoop(error, &controlInfo, &gains, &limits, &PIDs);
+    controlLoop(error + (errorChange/2), &controlInfo, &gains, &limits, &PIDs);
+    int slowChangeOutput = controlLoop(error + errorChange, &controlInfo, &gains, &limits, &PIDs);
 
     // Change Rapidly
-    controlLoop(error, &controlInfo, &gains, &limits);
-    int fastChangeOutput = controlLoop(error + errorChange, &controlInfo, &gains, &limits);
+    controlLoop(error, &controlInfo, &gains, &limits, &PIDs);
+    int fastChangeOutput = controlLoop(error + errorChange, &controlInfo, &gains, &limits, &PIDs);
 
     EXPECT_GT(fastChangeOutput, slowChangeOutput);
 }

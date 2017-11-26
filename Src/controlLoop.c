@@ -10,6 +10,7 @@
 #include "rate_control.h"
 #include "controlLoop.h"
 #include "imu.h"
+#include "log.h"
 
 FC_Status controlLoopInit()
 {
@@ -140,6 +141,7 @@ void vControlLoopTask(void *pvParameters)
 
     Rates_t actualRates;
     Rates_t desiredRates;
+    PidAllAxis_t PIDs;
     RotationAxisOutputs_t *rotationOutputsPtr;
 
     DEBUG_PRINT("Control loop start\n");
@@ -194,13 +196,15 @@ void vControlLoopTask(void *pvParameters)
                 /*DEBUG_PRINT("ra: %d, pa: %d, ya: %d\n", actualRates.roll,*/
                 /*actualRates.pitch, actualRates.yaw);*/
 
-                rotationOutputsPtr = controlRates(&actualRates, &desiredRates);
+                rotationOutputsPtr = controlRates(&actualRates, &desiredRates, &PIDs);
                 newGyroReceived = false;
 
                 /*DEBUG_PRINT("ro: %d, po: %d, yo: %d\n", rotationOutputsPtr->roll,*/
                 /*rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);*/
 
                 updateMotors(rcThrottle, rotationOutputsPtr);
+
+                sendLogDataToQueue(&desiredRates, &actualRates, rotationOutputsPtr, &PIDs);
             }
         } else {
             resetRateInfo(); // reset integral terms while on ground
