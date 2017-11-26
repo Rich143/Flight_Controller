@@ -252,8 +252,8 @@ FC_Status getRates(Rates_t *rates)
 
     /*DEBUG_PRINT("gx: %ld, gy: %ld, gz: %ld\n", gyro.x, gyro.y, gyro.z);*/
     rates->roll = gyro.x / 1000;
-    rates->pitch = gyro.y / 1000;
-    rates->yaw = gyro.z / 1000;
+    rates->pitch = -1 * (gyro.y / 1000); // Pitch seems to be reversed for gyro, simple fix is to negate it here
+    rates->yaw = -1 * (gyro.z / 1000); // Yaw seems to be reversed for gyro, simple fix is to negate it here
 
     return FC_OK;
 }

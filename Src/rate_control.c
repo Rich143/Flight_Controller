@@ -75,8 +75,8 @@ RotationAxisOutputs_t* controlRates(Rates_t* actualRates, Rates_t* desiredRates)
     ASSERT(desiredRates);
 
     int rollError = desiredRates->roll - actualRates->roll;
-    int pitchError = desiredRates->pitch + actualRates->pitch; // Pitch seems to be reversed for gyro, simple fix is to negate it here
-    int yawError =  desiredRates->yaw + actualRates->yaw; // Yaw seems to be reversed for gyro, simple fix is to negate it here
+    int pitchError = desiredRates->pitch - actualRates->pitch;
+    int yawError =  desiredRates->yaw - actualRates->yaw;
 
     rotationOutputs.roll = controlLoop(rollError, &rollInfo, &gains, &rateLimits);
     rotationOutputs.pitch = controlLoop(pitchError, &pitchInfo, &gains, &rateLimits);
