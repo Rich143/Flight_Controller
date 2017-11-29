@@ -4,6 +4,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 #include "fc.h"
 #include "sd.h"
@@ -65,6 +66,9 @@
 
 // Length of time to wait for data start
 #define SD_READ_TIMEOUT_TICKS            200
+
+// Wait time for DMA transfer to complete
+#define SPI_DMA_SEM_WAIT_TICKS           200
 
 // Various SD Card protocol parameters
 
@@ -137,6 +141,7 @@
 /* Private variables */
 
 SPI_HandleTypeDef SpiHandle;
+SemaphoreHandle_t SPI_DMA_CompleteSem = NULL;
 
 // A array of BLOCK_SIZE bytes, initialized to 0xFF in SD_Init, used to keep
 // the DOUT line high during block reads
@@ -155,7 +160,7 @@ static volatile DSTATUS Stat = STA_NOINIT;
 void SPI_Init(void) {
   SpiHandle.Instance               = SPIx;
 
-  SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_256;
+  SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_128;
   SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
   SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
   SpiHandle.Init.CLKPolarity       = SPI_POLARITY_LOW;
@@ -312,6 +317,39 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
   }
 }
 
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi)
+{
+    if(hspi->Instance == SPIx)
+    {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+        xSemaphoreGiveFromISR(SPI_DMA_CompleteSem, &xHigherPriorityTaskWoken);
+
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
+{
+    if(hspi->Instance == SPIx)
+    {
+        LED3_ON
+        DEBUG_PRINT("SPI DMA error!\n");
+    }
+}
+
+FC_Status SD_waitForDMAXferComplete()
+{
+    if( xSemaphoreTake( SPI_DMA_CompleteSem, SPI_DMA_SEM_WAIT_TICKS ) != pdTRUE )
+    {
+        DEBUG_PRINT("Timeout waiting for DMA SPI transfer complete\n");
+        return FC_ERROR;
+    }
+
+    return FC_OK;
+}
+
 /**
  * @brief Initialize the SD Card Driver
  *
@@ -321,6 +359,14 @@ void HAL_SPI_MspDeInit(SPI_HandleTypeDef *hspi)
 int8_t SD_Init() {
     memset(txBufferRead, 0xFF, BLOCK_SIZE);
     SPI_Init();
+
+    SPI_DMA_CompleteSem = xSemaphoreCreateBinary();
+
+    if (SPI_DMA_CompleteSem == NULL)
+    {
+        Error_Handler("Failed to init SPI DMA Sem\n");
+        return 1;
+    }
     return 0;
 }
 
@@ -596,14 +642,14 @@ int8_t SD_Read_Block(uint32_t block, uint8_t *data) {
 
     // Read in the data
     if (HAL_SPI_TransmitReceive_DMA(&SpiHandle, txBufferRead, data, BLOCK_SIZE) != 0) {
-        DEBUG_PRINT("Spi send failed\n");
+        DEBUG_PRINT("Spi DMA receive failed\n");
         return -2;
     }
 
     // Wait for data to be read
-    while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+    if (SD_waitForDMAXferComplete() != FC_OK)
     {
-        SD_DELAY(10); // Disk write takes approximately 10 ms
+        return -2;
     }
 
     // Read in the checksum
@@ -677,9 +723,9 @@ int8_t SD_Read_Multiple_Blocks(uint32_t block, uint8_t *data, uint32_t count) {
         }
 
         // Wait for data to be read
-        while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+        if (SD_waitForDMAXferComplete() != FC_OK)
         {
-            SD_DELAY(10); // Disk write takes approximately 10 ms
+            return -2;
         }
 
         // Read in the checksum
@@ -755,9 +801,9 @@ int8_t SD_Write_Block(uint32_t block, const uint8_t *data) {
     }
 
     // Wait for data to be written
-    while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+    if (SD_waitForDMAXferComplete() != FC_OK)
     {
-        SD_DELAY(10); // Disk write takes approximately 10 ms
+        return -2;
     }
 
     txBuffer[0] = 0xFF;
@@ -837,9 +883,9 @@ int8_t SD_Write_Multiple_Blocks(uint32_t block, const uint8_t *data, uint32_t co
         }
 
         // Wait for data to be written
-        while (HAL_SPI_GetState(&SpiHandle) != HAL_SPI_STATE_READY)
+        if (SD_waitForDMAXferComplete() != FC_OK)
         {
-            SD_DELAY(10); // Disk write takes approximately 10 ms
+            return -2;
         }
 
         txBuffer[0] = 0xFF;
@@ -901,7 +947,10 @@ DSTATUS disk_initialize(BYTE drv) {
     // TODO: Check for disk insertion
     if (0) return STA_NODISK;
 
-    SD_Init();
+    if (SD_Init() != 0)
+    {
+        return STA_NOINIT;
+    }
 
     CS_DISABLE();
 

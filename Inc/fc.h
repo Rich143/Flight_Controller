@@ -10,6 +10,8 @@
 void assertFailed(char *file, int line);
 
 #ifndef __UNIT_TEST
+#include "pins.h"
+
 #define ASSERT(expr) \
     if (expr) \
         {} \

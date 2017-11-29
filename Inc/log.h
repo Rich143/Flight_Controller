@@ -8,7 +8,7 @@
 #include "freertos.h"
 #include "queue.h"
 
-typedef struct  tLogMessage {
+typedef struct tLogMessage {
     Rates_t desiredRates;
     Rates_t actualRates;
     RotationAxisOutputs_t motorOutputs;

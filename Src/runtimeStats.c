@@ -37,8 +37,8 @@ void statsTimerInit()
     uwTimclock = 2*HAL_RCC_GetPCLK1Freq();
   }
 
-  /* Compute the prescaler value to have TIM5 counter clock equal to 10kHz */
-  uwPrescalerValue = (uint32_t) ((uwTimclock / 10000U) - 1U);
+  /* Compute the prescaler value to have TIM5 counter clock equal to 100kHz */
+  uwPrescalerValue = (uint32_t) ((uwTimclock / 100000U) - 1U);
 
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = uwPrescalerValue;
