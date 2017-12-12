@@ -10,6 +10,12 @@
 extern QueueHandle_t ratesQueue;
 #endif
 
+typedef struct Mag_t {
+    int32_t x;
+    int32_t y;
+    int32_t z;
+} Mag_t;
+
 typedef struct Accel_t {
     int32_t x;
     int32_t y;
@@ -33,6 +39,16 @@ typedef struct GyroRaw_t {
     int16_t y;
     int16_t z;
 } GyroRaw_t;
+
+/** 
+ * @brief Struct to hold the attitude of the quad
+ * The values are in degrees
+ */
+typedef struct Attitude_t {
+    int32_t roll;
+    int32_t pitch;
+    int32_t yaw;
+} Attitude_t;
 
 FC_Status getAccel(Accel_t *accelData);
 FC_Status getGyro(Gyro_t *gyroData);

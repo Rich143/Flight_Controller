@@ -10,7 +10,7 @@
 #define ACCEL_GYRO_ADDRESS_HAL (ACCEL_GYRO_ADDRESS<<1) // Left shift it 1 bit, the way the HAL functions want it
 
 #define MAG_ADDRESS 0x1E
-#define MAG_ADDRES_HAL (MAG_ADDRESS<<1)
+#define MAG_ADDRESS_HAL (MAG_ADDRESS<<1)
 
 /////////////////////////////////////////
 // LSM9DS1 Accel/Gyro (XL/G) Registers //
