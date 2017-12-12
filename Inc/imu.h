@@ -8,6 +8,7 @@
 #include "queue.h"
 
 extern QueueHandle_t ratesQueue;
+extern QueueHandle_t attitudeQueue;
 #endif
 
 typedef struct Mag_t {

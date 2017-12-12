@@ -28,7 +28,9 @@ FC_Status controlLoopInit()
 }
 
 FC_Status processPpmSignal(tPpmSignal *ppmSignal, Rates_t *desiredRatesOut,
-                           uint32_t *rcThrottleOut, bool *armedOut)
+                           Attitude_t *desiredAttitudeOut,
+                           uint32_t *rcThrottleOut, bool *armedOut,
+                           FlightMode_t * flightModeOut)
 {
     uint32_t rcThrottle = ppmSignal->signals[THROTTLE_CHANNEL];
     rcThrottle = limit(rcThrottle, MOTOR_LOW_VAL_US, MOTOR_HIGH_VAL_US);
@@ -44,29 +46,66 @@ FC_Status processPpmSignal(tPpmSignal *ppmSignal, Rates_t *desiredRatesOut,
         (*armedOut) = false;
     }
 
+    FlightMode_t flightMode;
+    if (ppmSignal->signals[FLIGHT_MODE_CHANNEL] >= SWITCH_HIGH_THRESHOLD) {
+        flightMode = ATTITUDE_MODE;
+    } else if (ppmSignal->signals[FLIGHT_MODE_CHANNEL] <= SWITCH_LOW_THRESHOLD) {
+        flightMode = RATE_MODE;
+    } else {
+        flightMode = INVALID_FLIGHT_MODE;
+    }
 
     /*DEBUG_PRINT("rin: %d, pin: %d, yin: %d\n", ppmSignal->signals[ROLL_CHANNEL],*/
     /*ppmSignal->signals[PITCH_CHANNEL],ppmSignal->signals[YAW_CHANNEL]);*/
-    desiredRatesOut->roll = limit(map(ppmSignal->signals[ROLL_CHANNEL],
-                                  MIN_RC_VAL, MAX_RC_VAL,
-                                  ROTATION_AXIS_OUTPUT_MIN,
-                                  ROTATION_AXIS_OUTPUT_MAX),
-                              ROTATION_AXIS_OUTPUT_MIN,
-                              ROTATION_AXIS_OUTPUT_MAX);
-    desiredRatesOut->pitch= limit(map(ppmSignal->signals[PITCH_CHANNEL],
-                                  MIN_RC_VAL, MAX_RC_VAL,
-                                  ROTATION_AXIS_OUTPUT_MIN,
-                                  ROTATION_AXIS_OUTPUT_MAX),
-                              ROTATION_AXIS_OUTPUT_MIN,
-                              ROTATION_AXIS_OUTPUT_MAX);
-    desiredRatesOut->yaw= limit(map(ppmSignal->signals[YAW_CHANNEL],
-                                MIN_RC_VAL, MAX_RC_VAL,
-                                ROTATION_AXIS_OUTPUT_MIN,
-                                ROTATION_AXIS_OUTPUT_MAX),
-                            ROTATION_AXIS_OUTPUT_MIN,
-                            ROTATION_AXIS_OUTPUT_MAX);
-    /*DEBUG_PRINT("rd: %d, pd: %d, yd: %d\n", desiredRatesOut->roll,*/
-    /*desiredRatesOut->pitch, desiredRatesOut->yaw);*/
+    switch (flightMode) {
+        case RATE_MODE:
+            desiredRatesOut->roll = limit(map(ppmSignal->signals[ROLL_CHANNEL],
+                                              MIN_RC_VAL, MAX_RC_VAL,
+                                              ROTATION_AXIS_OUTPUT_MIN,
+                                              ROTATION_AXIS_OUTPUT_MAX),
+                                          ROTATION_AXIS_OUTPUT_MIN,
+                                          ROTATION_AXIS_OUTPUT_MAX);
+            desiredRatesOut->pitch= limit(map(ppmSignal->signals[PITCH_CHANNEL],
+                                              MIN_RC_VAL, MAX_RC_VAL,
+                                              ROTATION_AXIS_OUTPUT_MIN,
+                                              ROTATION_AXIS_OUTPUT_MAX),
+                                          ROTATION_AXIS_OUTPUT_MIN,
+                                          ROTATION_AXIS_OUTPUT_MAX);
+            desiredRatesOut->yaw= limit(map(ppmSignal->signals[YAW_CHANNEL],
+                                            MIN_RC_VAL, MAX_RC_VAL,
+                                            ROTATION_AXIS_OUTPUT_MIN,
+                                            ROTATION_AXIS_OUTPUT_MAX),
+                                        ROTATION_AXIS_OUTPUT_MIN,
+                                        ROTATION_AXIS_OUTPUT_MAX);
+            /*DEBUG_PRINT("rd: %d, pd: %d, yd: %d\n", desiredRatesOut->roll,*/
+            /*desiredRatesOut->pitch, desiredRatesOut->yaw);*/
+            break;
+        case ATTITUDE_MODE:
+            desiredAttitudeOut->roll = limit(map(ppmSignal->signals[ROLL_CHANNEL],
+                                              MIN_RC_VAL, MAX_RC_VAL,
+                                              RATES_MIN,
+                                              RATES_MAX),
+                                          RATES_MIN,
+                                          RATES_MAX);
+            desiredAttitudeOut->pitch= limit(map(ppmSignal->signals[PITCH_CHANNEL],
+                                              MIN_RC_VAL, MAX_RC_VAL,
+                                              RATES_MIN,
+                                              RATES_MAX),
+                                          RATES_MIN,
+                                          RATES_MAX);
+            desiredRatesOut->yaw= limit(map(ppmSignal->signals[YAW_CHANNEL],
+                                            MIN_RC_VAL, MAX_RC_VAL,
+                                            ROTATION_AXIS_OUTPUT_MIN,
+                                            ROTATION_AXIS_OUTPUT_MAX),
+                                        ROTATION_AXIS_OUTPUT_MIN,
+                                        ROTATION_AXIS_OUTPUT_MAX);
+            break;
+        default:
+            DEBUG_PRINT("Received invalid flight mode from ppm signal\n");
+            return FC_ERROR;
+    }
+
+    (*flightModeOut) = flightMode;
 
     return FC_OK;
 }
@@ -109,6 +148,11 @@ FC_Status checkControlLoopStatus(TickType_t lastPpmRxTime,
         DEBUG_PRINT("Gyro timeout cur %lu last %lu\n", curTick, lastGyroRxTime);
         systemStatus = FC_ERROR;
     }
+    if (curTick - lastLoopTime > ATTITUDE_RX_TIMEOUT_MS)
+    {
+        DEBUG_PRINT("Attitude timeout cur %lu last %lu\n", curTick, lastLoopTime);
+        systemStatus = FC_ERROR;
+    }
     if (curTick - lastLoopTime > CONTROL_LOOP_TIMEOUT_MS)
     {
         DEBUG_PRINT("CtrlLp timeout cur %lu last %lu\n", curTick, lastLoopTime);
@@ -141,7 +185,12 @@ void vControlLoopTask(void *pvParameters)
 
     Rates_t actualRates;
     Rates_t desiredRates;
-    PidAllAxis_t PIDs;
+    Rates_t attitudeControlRateOutputPtr;
+    Attitude_t actualAttitude;
+    Attitude_t desiredAttitude;
+    PidAllAxis_t PIDs_RateControl;
+    PidAllAxis_t PIDs_AttitudeControl;
+    FlightMode_t flightMode;
     RotationAxisOutputs_t *rotationOutputsPtr;
 
     DEBUG_PRINT("Control loop start\n");
@@ -167,6 +216,7 @@ void vControlLoopTask(void *pvParameters)
     TickType_t lastPpmRxTime  = xTaskGetTickCount();
     TickType_t lastLoopTime   = xTaskGetTickCount();
     TickType_t lastGyroRxTime = xTaskGetTickCount();
+    TickType_t lastAttitudeRxTime = xTaskGetTickCount();
     // This is seperate from lastLoopTime because vTaskDelayUntil sets this
     // to the last wake time + increment, even if there is some unforseen delay
     // that causes the task to miss its deadline
@@ -177,37 +227,72 @@ void vControlLoopTask(void *pvParameters)
         if (xQueueReceive(ppmSignalQueue, &ppmSignal, 0) == pdTRUE) {
             lastPpmRxTime = xTaskGetTickCount();
 
-            if (processPpmSignal(&ppmSignal, &desiredRates,
-                                 &rcThrottle, &armed) != FC_OK)
+            if (processPpmSignal(&ppmSignal, &desiredRates, &desiredAttitude,
+                                 &rcThrottle, &armed, &flightMode) != FC_OK)
             {
                 DEBUG_PRINT("Failed to process ppm signal\n");
             }
         }
 
-        if (xQueueReceive(ratesQueue, &actualRates, 0) == pdTRUE) {
-            lastGyroRxTime = xTaskGetTickCount();
-            newGyroReceived = true;
-        } else {
-            DEBUG_PRINT("Failed to receive gyro data\n");
-        }
-
         if (armed && rcThrottle >= THROTTLE_LOW_THRESHOLD) {
-            if (newGyroReceived) {
-                /*DEBUG_PRINT("ra: %d, pa: %d, ya: %d\n", actualRates.roll,*/
-                /*actualRates.pitch, actualRates.yaw);*/
+            bool gyroReceived = false;
+            bool attitudeReceived = false;
+            switch (flightMode) {
+                case RATE_MODE:
+                    if (xQueueReceive(ratesQueue, &actualRates, 0) == pdTRUE) {
+                        lastGyroRxTime = xTaskGetTickCount();
 
-                rotationOutputsPtr = controlRates(&actualRates, &desiredRates, &PIDs);
-                newGyroReceived = false;
+                        /*DEBUG_PRINT("ra: %d, pa: %d, ya: %d\n", actualRates.roll,*/
+                        /*actualRates.pitch, actualRates.yaw);*/
 
-                /*DEBUG_PRINT("ro: %d, po: %d, yo: %d\n", rotationOutputsPtr->roll,*/
-                /*rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);*/
+                        rotationOutputsPtr = controlRates(&actualRates, &desiredRates, &PIDs_RateControl);
+                        updateMotors(rcThrottle, rotationOutputsPtr);
 
-                updateMotors(rcThrottle, rotationOutputsPtr);
+                        /*DEBUG_PRINT("ro: %d, po: %d, yo: %d\n", rotationOutputsPtr->roll,*/
+                        /*rotationOutputsPtr->pitch, rotationOutputsPtr->yaw);*/
+                    } else {
+                        DEBUG_PRINT("Failed to receive gyro data\n");
+                    }
+                    break;
+                case ATTITUDE_MODE:
+                    if (xQueueReceive(ratesQueue, &actualRates, 0) == pdTRUE) {
+                        lastGyroRxTime = xTaskGetTickCount();
+                        gyroReceived = true;
+                    } else {
+                        DEBUG_PRINT("Failed to receive gyro data\n");
+                    }
 
-                sendLogDataToQueue(&desiredRates, &actualRates, rotationOutputsPtr, &PIDs);
+                    if (xQueueReceive(attitudeQueue, &actualAttitude, 0) == pdTRUE) {
+                        lastAttitudeRxTime = xTaskGetTickCount();
+                        attitudeReceived = true;
+                    } else {
+                        DEBUG_PRINT("Failed to receive gyro data\n");
+                    }
+
+                    if (attitudeReceived && gyroReceived) {
+                        desiredAttitude.yaw = actualAttitude.yaw; // TODO: Fix to control yaw
+                        attitudeControlRateOutputPtr
+                            = controlAttitude(&actualAttitude, &desiredAttitude, true /* control yaw */,
+                                              &PIDs_AttitudeControl);
+
+                        rotationOutputsPtr
+                            = controlRates(&actualRates,
+                                           attitudeControlRateOutputPtr,
+                                           &PIDs_RateControl);
+
+                        updateMotors(rcThrottle, rotationOutputsPtr);
+                    }
+                    break;
+                default:
+                    DEBUG_PRINT("Error, invalid flight mode\n");
+                    motorsStop();
+                    break;
             }
+
+            sendLogDataToQueue(&desiredAttitude, &actualAttitude, &desiredRates, &actualRates, rotationOutputsPtr, &PIDs_RateControl, &PIDs_AttitudeControl, flightMode);
         } else {
             resetRateInfo(); // reset integral terms while on ground
+            resetAttitudeControlInfo();
             motorsStop();
         }
 

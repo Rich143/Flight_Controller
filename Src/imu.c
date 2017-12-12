@@ -77,8 +77,10 @@ const float   accelScaleFactors[3][3] =
 #ifndef __UNIT_TEST
 
 #define RATES_QUEUE_LENGTH 1 // only care about most recent element, so keep it short
+#define ATTITUDE_QUEUE_LENGTH 1 // only care about most recent element, so keep it short
 
 QueueHandle_t ratesQueue;
+QueueHandle_t attitudeQueue;
 
 FC_Status Mag_RegRead(uint8_t regAddress, uint8_t *val, int size)
 {
@@ -356,6 +358,13 @@ FC_Status IMU_Init(void)
     {
         DEBUG_PRINT("Failed to create rates queue\n");
     }
+
+    attitudeQueue = xQueueCreate(ATTITUDE_QUEUE_LENGTH, sizeof(Attitude_t));
+
+    if (attitudeQueue == NULL)
+    {
+        DEBUG_PRINT("Failed to create attitude queue\n");
+    }
 #endif
 
     return FC_OK;
@@ -461,66 +470,31 @@ FC_Status getGyro(Gyro_t *gyroData)
     return FC_OK;
 }
 
-FC_Status getRates(Rates_t *rates)
+FC_Status calculateRates(Rates_t *rates, Gyro_t *gyro)
 {
-    Gyro_t gyro;
-
-    if (getGyro(&gyro) != FC_OK) {
-        DEBUG_PRINT("Error reading gyro\n");
-        return FC_ERROR;
-    }
-
-    /*DEBUG_PRINT("gx: %ld, gy: %ld, gz: %ld\n", gyro.x, gyro.y, gyro.z);*/
-    rates->roll = gyro.x / 1000;
-    rates->pitch = gyro.y / 1000;
-    rates->yaw = gyro.z / 1000;
+    rates->roll = gyro->x / 1000;
+    rates->pitch = gyro->y / 1000;
+    rates->yaw = gyro->z / 1000;
 
     return FC_OK;
 }
 
-TickType_t lastMagRead  = 0;
-float mx;
-float my;
-float mz;
-FC_Status getAttitude(Attitude_t *attitude)
+FC_Status calculateAttitude(Attitude_t *attitude, Gyro_t *gyro,
+                            Accel_t *accel, Mag_t *mag)
 {
-    Gyro_t gyro;
-    Accel_t accel;
-    Mag_t mag;
+    float gx = gyro->y / 1000.0;
+    float gy = gyro->x / 1000.0;
+    float gz = gyro->z / 1000.0;
 
-    if (getGyro(&gyro) != FC_OK)
-    {
-        DEBUG_PRINT("Failed to get gyro data\n");
-        return FC_ERROR;
-    }
+    float ax = accel->y;
+    float ay = accel->x;
+    float az = accel->z;
 
-    float gx = gyro.y / 1000.0;
-    float gy = gyro.x / 1000.0;
-    float gz = gyro.z / 1000.0;
+    float mx = mag->y;
+    float my = -1 * mag->x;
+    float mz = mag->z;
 
-    if (getAccel(&accel) != FC_OK)
-    {
-        DEBUG_PRINT("Failed to get accel data\n");
-        return FC_ERROR;
-    }
-
-    float ax = accel.y;
-    float ay = accel.x;
-    float az = accel.z;
-
-    if (xTaskGetTickCount() - lastMagRead >= MAG_READ_PERIOD_TICKS) {
-        if (getMag(&mag) != FC_OK)
-        {
-            DEBUG_PRINT("Failed to get mag data\n");
-            return FC_ERROR;
-        }
-
-        mx = mag.y;
-        my = -1 * mag.x;
-        mz = mag.z;
-    }
-
-    for (int i=0; i < 20; i++) {
+    for (int i=0; i < 10; i++) {
         madgwickUpdate(gx,gy,gz,ax,ay,az,mx,my,mz);
     }
 
@@ -545,47 +519,53 @@ void vIMUTask(void *pvParameters)
 
     madgwickInit(4000);
 
-    /*Rates_t rates = {0};*/
+    Rates_t rates = {0};
     Attitude_t attitude = {0};
+    Mag_t      mag;
+    Accel_t    accel;
+    Gyro_t     gyro;
     TickType_t lastWakeTime = xTaskGetTickCount();
     TickType_t lastPrintTime  = xTaskGetTickCount();
-    /*TickType_t lastMagRead  = xTaskGetTickCount();*/
+    TickType_t lastMagRead  = xTaskGetTickCount();
     for ( ;; )
     {
-        /*if (getRates(&rates) == FC_OK) {*/
-            /*xQueueOverwrite(ratesQueue, (void *)&rates);*/
-        /*}*/
-        /*else {*/
-            /*DEBUG_PRINT("Error getting rates\n");*/
-        /*}*/
-
-        /*if (xTaskGetTickCount() - lastMagRead >= MAG_READ_PERIOD_TICKS)*/
-        /*{*/
-            if (getAttitude(&attitude) == FC_OK)
+        if (getGyro(&gyro) != FC_OK)
+        {
+            DEBUG_PRINT("Failed to get gyro data\n");
+            continue;
+        }
+        if (getAccel(&accel) != FC_OK)
+        {
+            DEBUG_PRINT("Failed to get accel data\n");
+            continue;
+        }
+        if (xTaskGetTickCount() - lastMagRead >= MAG_READ_PERIOD_TICKS) {
+            if (getMag(&mag) != FC_OK)
             {
-                /*DEBUG_PRINT("roll: %ld, pitch: %ld, yaw: %ld\n", attitude.roll,*/
-                            /*attitude.pitch, attitude.yaw);*/
-                /*DEBUG_PRINT("Orientation: %ld %ld %ld\n", attitude.roll,*/
-                            /*attitude.pitch, attitude.yaw);*/
-            } else {
-                DEBUG_PRINT("Failed to get attitude\n");
+                DEBUG_PRINT("Failed to get mag data\n");
+                continue;
             }
+        }
 
-            if (xTaskGetTickCount() - lastPrintTime > 50) {
-                DEBUG_PRINT("Orientation: %ld %ld %ld\n", attitude.roll,
-                            attitude.pitch, attitude.yaw);
-                lastPrintTime = xTaskGetTickCount();
-            }
-            /*lastMagRead = xTaskGetTickCount();*/
-        /*}*/
+        if (calculateRates(&rates, &gyro) == FC_OK) {
+            xQueueOverwrite(ratesQueue, (void *)&rates);
+        }
+        else {
+            DEBUG_PRINT("Error calculating rates\n");
+        }
 
-        /*Mag_t mag;*/
-        /*if (getMag(&mag) == FC_OK)*/
-        /*{*/
-            /*DEBUG_PRINT("x: %ld, y: %ld, z: %ld\n", mag.x, mag.y, mag.z);*/
-        /*} else {*/
-            /*DEBUG_PRINT("Failed to read mag\n");*/
-        /*}*/
+        if (calculateAttitude(&attitude, &gyro, &accel, &mag) == FC_OK)
+        {
+            xQueueOverwrite(attitudeQueue, (void *)&attitude);
+        } else {
+            DEBUG_PRINT("Failed to calculate attitude\n");
+        }
+
+        if (xTaskGetTickCount() - lastPrintTime > 50) {
+            DEBUG_PRINT("Orientation: %ld %ld %ld\n", attitude.roll,
+                        attitude.pitch, attitude.yaw);
+            lastPrintTime = xTaskGetTickCount();
+        }
 
         // This should run at the same rate as the control loop
         // as there is no point running the control loop without new data

@@ -11,8 +11,7 @@
 #include "debug.h"
 #endif
 
-/*#define RATE_LOOP_PERIOD_US (CONTROL_LOOP_PERIOD_MS * 1000)*/
-#define RATE_LOOP_PERIOD_MS (5)
+#define RATE_LOOP_PERIOD_MS CONTROL_LOOP_PERIOD_MS
 
 // Testing on bench
 PID_Gains_t gains = {

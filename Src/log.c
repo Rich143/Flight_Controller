@@ -172,19 +172,27 @@ FC_Status logWriteTest()
     return FC_OK;
 }
 
-FC_Status sendLogDataToQueue(Rates_t *desiredRates, Rates_t *actualRates,
+FC_Status sendLogDataToQueue(Attitude_t *desiredAttitude,
+                             Attitude_t *actualAttitude,
+                             Rates_t *desiredRates, Rates_t *actualRates,
                              RotationAxisOutputs_t *rotationOutputsPtr,
-                             PidAllAxis_t *PIDs)
+                             PidAllAxis_t *PIDs_RateControl,
+                             PidAllAxis_t *PIDs_AttitudeControl,
+                             FlightMode_t flightMode)
 {
     tLogMessage logMsg;
 
     if (HAL_GetTick() - lastLogTime > LOG_PERIOD_TICKS) {
         lastLogTime = HAL_GetTick();
 
+        memcpy(&(logMsg.desiredAttitude), desiredAttitude, sizeof(Attitude_t));
+        memcpy(&(logMsg.actualAttitude), actualAttitude, sizeof(Attitude_t));
         memcpy(&(logMsg.desiredRates), desiredRates, sizeof(Rates_t));
         memcpy(&(logMsg.actualRates), actualRates, sizeof(Rates_t));
         memcpy(&(logMsg.motorOutputs), rotationOutputsPtr, sizeof(RotationAxisOutputs_t));
-        memcpy(&(logMsg.PIDs), PIDs, sizeof(PidAllAxis_t));
+        memcpy(&(logMsg.PIDs), PIDs_RateControl, sizeof(PidAllAxis_t));
+        memcpy(&(logMsg.PIDs), PIDs_AttitudeControl, sizeof(PidAllAxis_t));
+        logMsg.flightMode = flightMode;
         logMsg.timestamp_ms = HAL_GetTick();
 
         if (xQueueSend(logQueue, &logMsg, 0) != pdTRUE)
@@ -203,6 +211,24 @@ FC_Status logDataStruct(tLogMessage *msg)
     int totalBytesWritten = 0;
 
     // Log format in csv
+    // desiredAttitude (roll,pitch,yaw)
+    written = f_printf(&fil, "%d,%d,%d,", msg->desiredAttitude.roll, msg->desiredAttitude.pitch, msg->desiredAttitude.yaw);
+    /*DEBUG_PRINT("%d,%d,%d | ", msg->desiredAttitude.roll, msg->desiredAttitude.pitch, msg->desiredAttitude.yaw);*/
+    if (written < 0)
+    {
+        return FC_ERROR;
+    }
+    totalBytesWritten += written;
+
+    // actualAttitude (roll,pitch,yaw)
+    written = f_printf(&fil, "%d,%d,%d,", msg->actualAttitude.roll, msg->actualAttitude.pitch, msg->actualAttitude.yaw);
+    /*DEBUG_PRINT("%d,%d,%d | ", msg->actualAttitude.roll, msg->actualAttitude.pitch, msg->actualAttitude.yaw);*/
+    if (written < 0)
+    {
+        return FC_ERROR;
+    }
+    totalBytesWritten += written;
+
     // desiredRates (roll,pitch,yaw)
     written = f_printf(&fil, "%d,%d,%d,", msg->desiredRates.roll, msg->desiredRates.pitch, msg->desiredRates.yaw);
     /*DEBUG_PRINT("%d,%d,%d | ", msg->desiredRates.roll, msg->desiredRates.pitch, msg->desiredRates.yaw);*/
@@ -230,6 +256,9 @@ FC_Status logDataStruct(tLogMessage *msg)
     }
     totalBytesWritten += written;
 
+    /*
+     * Rate PIDs
+     */
     // pid roll (p,i,d)
     written = f_printf(&fil, "%d,%d,%d,", msg->PIDs.roll.p, msg->PIDs.roll.i, msg->PIDs.roll.d);
     /*DEBUG_PRINT("%d,%d,%d | ", msg->PIDs.roll.p, msg->PIDs.roll.i, msg->PIDs.roll.d);*/
@@ -251,6 +280,41 @@ FC_Status logDataStruct(tLogMessage *msg)
     // pid yaw (p,i,d)
     written = f_printf(&fil, "%d,%d,%d,", msg->PIDs.yaw.p, msg->PIDs.yaw.i, msg->PIDs.yaw.d);
     /*DEBUG_PRINT("%d,%d,%d | ", msg->PIDs.yaw.p, msg->PIDs.yaw.i, msg->PIDs.yaw.d);*/
+    if (written < 0)
+    {
+        return FC_ERROR;
+    }
+    totalBytesWritten += written;
+
+    /*
+     * Attitude PIDs
+     * only P is used for now
+     */
+    // pid roll (p)
+    written = f_printf(&fil, "%d,", msg->PIDs.roll.p);
+    if (written < 0)
+    {
+        return FC_ERROR;
+    }
+    totalBytesWritten += written;
+
+    // pid pitch (p)
+    written = f_printf(&fil, "%d,", msg->PIDs.pitch.p);
+    if (written < 0)
+    {
+        return FC_ERROR;
+    }
+    totalBytesWritten += written;
+
+    // pid yaw (p)
+    written = f_printf(&fil, "%d,", msg->PIDs.yaw.p);
+    if (written < 0)
+    {
+        return FC_ERROR;
+    }
+
+    // flight mode
+    written = f_printf(&fil, "%d,", msg->flightMode);
     if (written < 0)
     {
         return FC_ERROR;

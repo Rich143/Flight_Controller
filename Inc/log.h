@@ -9,10 +9,14 @@
 #include "queue.h"
 
 typedef struct tLogMessage {
+    Attitude_t desiredAttitude;
+    Attitude_t actualAttitude;
     Rates_t desiredRates;
     Rates_t actualRates;
     RotationAxisOutputs_t motorOutputs;
-    PidAllAxis_t PIDs;
+    PidAllAxis_t PIDs_RateControl;
+    PidAllAxis_t PIDs_AttitudeControl;
+    FlightMode_t flightMode;
     uint32_t timestamp_ms;
 } tLogMessage;
 

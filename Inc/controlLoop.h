@@ -15,8 +15,17 @@
  * assumed
  */
 #define PPM_RX_TIMEOUT_MS       1000
+#define ATTITUDE_RX_TIMEOUT_MS  (CONTROL_LOOP_PERIOD_MS * 5)
 #define GYRO_RX_TIMEOUT_MS      (CONTROL_LOOP_PERIOD_MS * 5)
 #define CONTROL_LOOP_TIMEOUT_MS (CONTROL_LOOP_PERIOD_MS * 5)
+
+typedef enum FlightMode_t
+{
+    INVALID_FLIGHT_MODE = 0,
+    RATE_MODE = 1,
+    ATTITUDE_MODE = 2,
+    MAX_FLIGHT_MODE_PLUS_1,
+} FlightMode_t;
 
 void vControlLoopTask(void *pvParameter);
 
