@@ -51,9 +51,10 @@ LINK_SCRIPT="$(DRIVER_DIR)/STM32F410RBTx_FLASH.ld"
 #  -Wl,--start-group -m -Wl,--end-group creates a group that is searched repeatedly for circular dependencies until no new undefined references are created
 #  --cref, Output a cross reference table. If a linker map file is being generated, the cross reference table is printed to the map file
 # -Wl,--defsym=malloc_getpagesize_P=0x1000, set the default page size of malloc to 0x1000, which means the heap increases in size by 4096 bytes at a time
-LINKER_FLAGS=-lc -lnosys -lm -mthumb -mcpu=cortex-m4  -Wl,--gc-sections -T$(LINK_SCRIPT) -static  -Wl,--start-group -lm -Wl,--end-group -Wl,-cref "-Wl,-Map=$(MAP_FILE)" -Wl,--defsym=malloc_getpagesize_P=0x1000
+LINKER_FLAGS=-lc -lnosys -lm -mthumb -mcpu=cortex-m4  -Wl,--gc-sections -T$(LINK_SCRIPT) -static  -Wl,--start-group -lm -Wl,--end-group -Wl,-cref "-Wl,-Map=$(MAP_FILE)" -Wl,--defsym=malloc_getpagesize_P=0x1000 -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
-COMMON_FLAGS=-c -g -O2 -mcpu=cortex-m4 -std=gnu99 -Wall -mthumb -mfloat-abi=softfp
+COMMON_FLAGS=-c -g -O2 -mcpu=cortex-m4 -std=gnu99 -Wall -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+#COMMON_FLAGS=-c -g -O2 -mcpu=cortex-m4 -std=gnu99 -Wall -mthumb -mfloat-abi=softfp
 ASSEMBLER_FLAGS=$(COMMON_FLAGS) -x assembler-with-cpp
 
 # -ffunction-sections and -fdata-sections, Place each function or data item into its own section in the output file
